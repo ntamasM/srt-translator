@@ -40,6 +40,52 @@ cp .env.example .env
 # Edit .env and set your OPENAI_API_KEY
 ```
 
+## Recommended Data Folder Structure
+
+For optimal organization, create a `data` folder with the following structure:
+
+```
+data/
+├── subtitles/          # Source SRT files to translate
+│   ├── Movie.2023.en.srt
+│   ├── Series.S01E01.en.srt
+│   └── Anime.Episode.01.en.srt
+├── translated/         # Output directory for translated files
+│   ├── Movie.2023.el.srt
+│   ├── Series.S01E01.el.srt
+│   └── Anime.Episode.01.el.srt
+├── glossary/          # Glossary files for term protection
+│   ├── anime_terms.txt
+│   ├── technical_terms.txt
+│   └── character_names.txt
+└── remove/            # Word removal files
+    ├── profanity.txt
+    ├── formatting_codes.txt
+    └── unwanted_text.txt
+```
+
+### Folder Purposes
+
+- **`subtitles/`**: Store your original SRT files here for batch processing
+- **`translated/`**: Translated files are automatically saved here with appropriate language extensions
+- **`glossary/`**: Keep glossary files organized by content type (anime, technical, etc.)
+- **`remove/`**: Store word removal lists categorized by purpose (profanity, formatting, etc.)
+
+### Example Usage with Data Structure
+
+```bash
+# Translate all files in subtitles folder
+srt-translate --input-dir data/subtitles --output-dir data/translated \
+  --glossary data/glossary/anime_terms.txt \
+  --removal-file data/remove/formatting_codes.txt \
+  --src en --tgt el
+
+# Single file with multiple resources
+srt-translate data/subtitles/movie.srt data/translated/movie.el.srt \
+  --glossary data/glossary/technical_terms.txt \
+  --removal-file data/remove/profanity.txt
+```
+
 ## Usage
 
 ### Basic Translation
