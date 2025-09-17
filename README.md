@@ -66,6 +66,22 @@ Protect specific terms from translation:
 srt-translate input.srt output.srt --glossary terms.txt --glossary-ci
 ```
 
+### Remove Unwanted Words
+
+Remove specific words during translation:
+
+```bash
+srt-translate input.srt output.srt --removal-file remove_words.txt
+```
+
+### Custom Translator Name
+
+Set custom translator name in credits:
+
+```bash
+srt-translate input.srt output.srt --translator-name "Your Name"
+```
+
 ### Batch Processing
 
 Process all SRT files in a directory:
@@ -74,36 +90,136 @@ Process all SRT files in a directory:
 srt-translate --input-dir ./subtitles --output-dir ./translated
 ```
 
-### Advanced Options
+### Advanced Model Settings
 
-Use a different model and append watermark:
+Use a different model with custom temperature and top-p:
 
 ```bash
-srt-translate input.srt output.srt --model gpt-4 --temperature 0.1 --append-watermark
+srt-translate input.srt output.srt --model gpt-4 --temperature 0.1 --top-p 0.05
 ```
 
-Disable credit replacement:
+### Disable Features
+
+Disable credit replacement and don't append watermark:
 
 ```bash
-srt-translate input.srt output.srt --no-replace-credits
+srt-translate input.srt output.srt --no-replace-credits --no-append-watermark
+```
+
+### Complete Example
+
+Use all features together:
+
+```bash
+srt-translate input.srt output.srt \
+  --src en --tgt el \
+  --model gpt-4o-mini \
+  --temperature 0.2 --top-p 0.1 \
+  --glossary anime_terms.txt --glossary-ci \
+  --removal-file profanity.txt \
+  --translator-name "Your Name" \
+  --append-watermark
+```
+
+### Batch Processing with Options
+
+Process entire directory with custom settings:
+
+```bash
+srt-translate --input-dir ./raw_subtitles --output-dir ./clean_translated \
+  --src en --tgt es \
+  --glossary preserve_terms.txt --glossary-ci \
+  --removal-file filter_words.txt \
+  --translator-name "Team Translator" \
+  --model gpt-4o \
+  --temperature 0.15
 ```
 
 ## Command Line Options
 
-| Option                  | Default       | Description                        |
-| ----------------------- | ------------- | ---------------------------------- |
-| `--src`                 | `en`          | Source language code               |
-| `--tgt`                 | `el`          | Target language code               |
-| `--model`               | `gpt-4o-mini` | OpenAI model to use                |
-| `--temperature`         | `0.2`         | Sampling temperature (0-2)         |
-| `--top-p`               | `0.1`         | Top-p sampling parameter (0-1)     |
-| `--glossary`            | None          | Path to glossary file              |
-| `--glossary-ci`         | False         | Case-insensitive glossary matching |
-| `--removal-file`        | None          | Path to word removal file          |
-| `--replace-credits`     | True          | Replace translator credits         |
-| `--no-replace-credits`  | False         | Don't replace translator credits   |
-| `--append-watermark`    | False         | Append watermark cue at end        |
-| `--no-append-watermark` | True          | Don't append watermark cue         |
+### Positional Arguments
+
+| Argument      | Required | Description                                        |
+| ------------- | -------- | -------------------------------------------------- |
+| `input_file`  | Yes\*    | Input SRT file path (when not using `--input-dir`) |
+| `output_file` | Yes\*    | Output SRT file path (when using `input_file`)     |
+
+\*Either use `input_file`/`output_file` for single file mode OR `--input-dir`/`--output-dir` for batch mode.
+
+### Optional Arguments
+
+| Option                  | Default       | Type   | Description                                   |
+| ----------------------- | ------------- | ------ | --------------------------------------------- |
+| `--input-dir`           | None          | String | Input directory containing SRT files (batch)  |
+| `--output-dir`          | None          | String | Output directory for translated files (batch) |
+| `--src`                 | `en`          | String | Source language code                          |
+| `--tgt`                 | `el`          | String | Target language code                          |
+| `--model`               | `gpt-4o-mini` | String | OpenAI model to use                           |
+| `--temperature`         | `0.2`         | Float  | Sampling temperature (0-2)                    |
+| `--top-p`               | `0.1`         | Float  | Top-p sampling parameter (0-1)                |
+| `--glossary`            | None          | String | Path to glossary file                         |
+| `--glossary-ci`         | False         | Flag   | Case-insensitive glossary matching            |
+| `--removal-file`        | None          | String | Path to word removal file                     |
+| `--translator-name`     | `Ntamas`      | String | Name of translator to use in credits          |
+| `--replace-credits`     | True          | Flag   | Replace translator credits (default: enabled) |
+| `--no-replace-credits`  | False         | Flag   | Don't replace translator credits              |
+| `--append-watermark`    | False         | Flag   | Append watermark cue at end                   |
+| `--no-append-watermark` | True          | Flag   | Don't append watermark cue (default)          |
+
+### Usage Modes
+
+#### Single File Mode
+
+```bash
+srt-translate input.srt output.srt [options]
+```
+
+#### Batch Mode
+
+```bash
+srt-translate --input-dir ./subtitles --output-dir ./translated [options]
+```
+
+### Parameter Details
+
+#### Temperature (`--temperature`)
+
+- **Range**: 0.0 to 2.0
+- **Default**: 0.2
+- **Description**: Controls randomness in translation. Lower values (0.1-0.3) make output more deterministic and consistent. Higher values (0.7-1.0) make output more creative but potentially less consistent.
+
+#### Top-p (`--top-p`)
+
+- **Range**: 0.0 to 1.0
+- **Default**: 0.1
+- **Description**: Controls diversity via nucleus sampling. Lower values focus on most likely words, higher values allow more variation.
+
+#### Language Codes (`--src`, `--tgt`)
+
+- **Format**: ISO 639-1 language codes (e.g., `en`, `es`, `fr`, `de`, `ja`, `ko`)
+- **Examples**:
+  - English to Spanish: `--src en --tgt es`
+  - Japanese to English: `--src ja --tgt en`
+  - French to German: `--src fr --tgt de`
+
+#### Model Selection (`--model`)
+
+- **Available Models**: Any OpenAI model (e.g., `gpt-4`, `gpt-4o`, `gpt-4o-mini`, `gpt-3.5-turbo`)
+- **Recommendation**: `gpt-4o-mini` for cost-effective translation, `gpt-4o` for highest quality
+
+### File Requirements
+
+#### Glossary File Format
+
+- One term per line
+- Comments start with `#`
+- Case sensitivity controlled by `--glossary-ci` flag
+
+#### Removal File Format
+
+- One word per line to remove
+- Case-insensitive matching
+- Removes whole words only (uses word boundaries)
 
 ## Glossary File Format
 
