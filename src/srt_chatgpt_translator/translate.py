@@ -52,7 +52,8 @@ class SRTTranslator:
     
     def translate_file(self, input_path: str, output_path: str, 
                       src_lang: str, tgt_lang: str, 
-                      append_watermark: bool = False) -> None:
+                      append_watermark: bool = False,
+                      add_credits: bool = True) -> None:
         """Translate an SRT file.
         
         Args:
@@ -60,7 +61,8 @@ class SRTTranslator:
             output_path: Path to output SRT file
             src_lang: Source language code
             tgt_lang: Target language code
-            append_watermark: Whether to append watermark cue at the end
+            append_watermark: Whether to append watermark cue at the end (legacy)
+            add_credits: Whether to intelligently add credits (default: True)
         """
         # Read and parse SRT file
         try:
@@ -85,8 +87,11 @@ class SRTTranslator:
             translated_subtitle = self._translate_subtitle(subtitle, src_lang, tgt_lang)
             translated_subtitles.append(translated_subtitle)
         
-        # Add watermark if requested
-        if append_watermark:
+        # Add credits intelligently (either in a gap or at the end)
+        if add_credits:
+            translated_subtitles = self._insert_credits_smartly(translated_subtitles)
+        elif append_watermark:
+            # Legacy watermark support
             watermark_cue = self._create_watermark_cue(translated_subtitles)
             translated_subtitles.append(watermark_cue)
         
@@ -107,7 +112,8 @@ class SRTTranslator:
     
     def translate_directory(self, input_dir: str, output_dir: str,
                            src_lang: str, tgt_lang: str,
-                           append_watermark: bool = False) -> None:
+                           append_watermark: bool = False,
+                           add_credits: bool = True) -> None:
         """Translate all SRT files in a directory.
         
         Args:
@@ -115,7 +121,8 @@ class SRTTranslator:
             output_dir: Output directory path
             src_lang: Source language code
             tgt_lang: Target language code
-            append_watermark: Whether to append watermark cue at the end
+            append_watermark: Whether to append watermark cue at the end (legacy)
+            add_credits: Whether to intelligently add credits (default: True)
         """
         input_path = Path(input_dir)
         output_path = Path(output_dir)
@@ -143,7 +150,7 @@ class SRTTranslator:
             try:
                 self.translate_file(
                     input_file_path, output_file_path, 
-                    src_lang, tgt_lang, append_watermark
+                    src_lang, tgt_lang, append_watermark, add_credits
                 )
             except Exception as e:
                 print(f"Error processing {srt_file.name}: {e}")
@@ -226,3 +233,84 @@ class SRTTranslator:
             end=watermark_end,
             content=f"Translated by {self.translator_name} with AI"
         )
+
+    def _find_best_gap_for_credits(self, subtitles: List[srt.Subtitle], min_gap_seconds: float = 5.0) -> tuple:
+        """Find the best gap between subtitles to insert credits.
+        
+        Args:
+            subtitles: List of subtitle objects
+            min_gap_seconds: Minimum gap size in seconds to consider
+            
+        Returns:
+            Tuple of (insert_after_index, gap_seconds, start_time, end_time) or (None, 0, None, None) if no suitable gap
+        """
+        if len(subtitles) < 2:
+            return None, 0, None, None
+        
+        best_gap = None
+        best_gap_seconds = 0
+        
+        for i in range(len(subtitles) - 1):
+            current_end = subtitles[i].end
+            next_start = subtitles[i + 1].start
+            gap_seconds = (next_start - current_end).total_seconds()
+            
+            # Check if this gap is suitable and better than current best
+            if gap_seconds >= min_gap_seconds and gap_seconds > best_gap_seconds:
+                # Calculate credit timing (centered in the gap with 3-second duration)
+                gap_center = current_end + srt.timedelta(seconds=gap_seconds / 2)
+                credit_start = gap_center - srt.timedelta(seconds=1.5)
+                credit_end = gap_center + srt.timedelta(seconds=1.5)
+                
+                # Make sure credits don't overlap with existing subtitles
+                if credit_start >= current_end and credit_end <= next_start:
+                    best_gap = (subtitles[i].index, gap_seconds, credit_start, credit_end)
+                    best_gap_seconds = gap_seconds
+        
+        if best_gap:
+            return best_gap
+        else:
+            return None, 0, None, None
+
+    def _insert_credits_smartly(self, subtitles: List[srt.Subtitle]) -> List[srt.Subtitle]:
+        """Insert credits either in a suitable gap or at the end.
+        
+        Args:
+            subtitles: List of subtitle objects
+            
+        Returns:
+            List of subtitles with credits inserted
+        """
+        if not subtitles:
+            return subtitles
+        
+        # Try to find a good gap for credits
+        insert_after_index, gap_seconds, credit_start, credit_end = self._find_best_gap_for_credits(subtitles)
+        
+        if insert_after_index is not None:
+            # Insert credits in the gap
+            # Find the position to insert (after the subtitle with insert_after_index)
+            insert_position = next(i for i, sub in enumerate(subtitles) if sub.index == insert_after_index) + 1
+            
+            # Create credits subtitle
+            credits_subtitle = srt.Subtitle(
+                index=len(subtitles) + 1,  # Will be renumbered later
+                start=credit_start,
+                end=credit_end,
+                content=f"Translated by {self.translator_name} with AI"
+            )
+            
+            # Insert credits and renumber all subsequent subtitles
+            result = subtitles[:insert_position] + [credits_subtitle] + subtitles[insert_position:]
+            
+            # Renumber all subtitles to maintain sequence
+            for i, subtitle in enumerate(result, 1):
+                subtitle.index = i
+            
+            print(f"Credits inserted in {gap_seconds:.1f}s gap after subtitle {insert_after_index}")
+            return result
+        else:
+            # No suitable gap found, append at the end
+            credits_subtitle = self._create_watermark_cue(subtitles)
+            print("Credits appended at the end (no suitable gap found)")
+            return subtitles + [credits_subtitle]

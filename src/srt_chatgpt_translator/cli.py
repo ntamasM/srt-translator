@@ -142,6 +142,20 @@ Examples:
         help="Do not append watermark cue (default)"
     )
     
+    # Smart credits option
+    parser.add_argument(
+        "--add-credits",
+        action="store_true",
+        default=True,
+        help="Intelligently add translator credits in gaps or at end (default: enabled)"
+    )
+    parser.add_argument(
+        "--no-add-credits",
+        action="store_false",
+        dest="add_credits",
+        help="Do not add translator credits automatically"
+    )
+    
     return parser
 
 
@@ -238,7 +252,8 @@ def main() -> None:
                 output_path=args.output_file,
                 src_lang=args.src,
                 tgt_lang=args.tgt,
-                append_watermark=args.append_watermark
+                append_watermark=args.append_watermark,
+                add_credits=args.add_credits
             )
         else:
             # Batch mode
@@ -247,7 +262,8 @@ def main() -> None:
                 output_dir=args.output_dir,
                 src_lang=args.src,
                 tgt_lang=args.tgt,
-                append_watermark=args.append_watermark
+                append_watermark=args.append_watermark,
+                add_credits=args.add_credits
             )
     except KeyboardInterrupt:
         print("\nTranslation interrupted by user")

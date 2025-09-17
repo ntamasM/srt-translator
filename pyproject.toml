@@ -7,7 +7,7 @@ name = "srt-chatgpt-translator"
 version = "1.0.0"
 description = "A Python CLI tool to translate SubRip (.srt) subtitle files using OpenAI's API while preserving exact structure"
 authors = [
-    {name = "Ntamas", email = "ntamas@example.com"}
+    {name = "Ntamas", email = "manolis.ntamadakis@gmail.com"}
 ]
 readme = "README.md"
 license = {text = "MIT"}

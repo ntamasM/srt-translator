@@ -117,8 +117,8 @@ srt-translate input.srt output.srt \
   --temperature 0.2 --top-p 0.1 \
   --glossary anime_terms.txt --glossary-ci \
   --removal-file profanity.txt \
-  --translator-name "Your Name" \
-  --append-watermark
+  --translator-name "Your Name"
+  # Credits will be automatically inserted in the best gap!
 ```
 
 ### Batch Processing with Options
@@ -163,7 +163,9 @@ srt-translate --input-dir ./raw_subtitles --output-dir ./clean_translated \
 | `--translator-name`     | `Ntamas`      | String | Name of translator to use in credits          |
 | `--replace-credits`     | True          | Flag   | Replace translator credits (default: enabled) |
 | `--no-replace-credits`  | False         | Flag   | Don't replace translator credits              |
-| `--append-watermark`    | False         | Flag   | Append watermark cue at end                   |
+| `--add-credits`         | True          | Flag   | Smart credits insertion (default: enabled)    |
+| `--no-add-credits`      | False         | Flag   | Don't add translator credits automatically    |
+| `--append-watermark`    | False         | Flag   | Append watermark cue at end (legacy)          |
 | `--no-append-watermark` | True          | Flag   | Don't append watermark cue (default)          |
 
 ### Usage Modes
@@ -338,6 +340,61 @@ The tool processes subtitles in the following order:
 2. **Glossary Protection**: Protect terms from translation
 3. **Translation**: Translate remaining text
 4. **Structure Restoration**: Restore formatting and timing
+5. **Smart Credits Insertion**: Add translator credits in optimal location
+
+## Smart Credits Insertion
+
+The tool automatically adds translator credits without disrupting the viewing experience.
+
+### How It Works
+
+1. **Gap Analysis**: Analyzes timing gaps between subtitles (≥5 seconds)
+2. **Optimal Placement**: Inserts credits in the largest suitable gap
+3. **Fallback**: If no suitable gap exists, credits are added at the end
+4. **Non-Intrusive**: Credits appear during natural pauses in dialogue
+
+### Examples
+
+#### Credits in Gap
+
+```srt
+147
+00:08:48,000 --> 00:08:50,947
+Last subtitle before gap.
+
+148                              ← Credits inserted here
+00:09:00,645 --> 00:09:03,645
+Translated by Ntamas with AI
+
+149                              ← Original subtitle 148 renumbered
+00:09:13,344 --> 00:09:15,096
+Next subtitle after gap.
+```
+
+#### Credits at End (no suitable gap)
+
+```srt
+355
+00:23:38,416 --> 00:23:40,252
+Final dialogue subtitle.
+
+356
+00:23:41,252 --> 00:23:44,252
+Translated by Ntamas with AI
+```
+
+### Control Options
+
+```bash
+# Default behavior (credits enabled)
+srt-translate input.srt output.srt
+
+# Disable automatic credits
+srt-translate input.srt output.srt --no-add-credits
+
+# Custom translator name
+srt-translate input.srt output.srt --translator-name "Your Name"
+```
 
 ## Environment Variables
 
