@@ -99,6 +99,7 @@ srt-translate input.srt output.srt --no-replace-credits
 | `--top-p`               | `0.1`         | Top-p sampling parameter (0-1)     |
 | `--glossary`            | None          | Path to glossary file              |
 | `--glossary-ci`         | False         | Case-insensitive glossary matching |
+| `--removal-file`        | None          | Path to word removal file          |
 | `--replace-credits`     | True          | Replace translator credits         |
 | `--no-replace-credits`  | False         | Don't replace translator credits   |
 | `--append-watermark`    | False         | Append watermark cue at end        |
@@ -121,6 +122,91 @@ The tool includes built-in protection for common anime honorifics:
 
 - `-san`, `-kun`, `-chan`, `-sama`
 - `senpai`, `sensei`, `onii-chan`, etc.
+
+## Word Removal
+
+The tool supports complete removal of specified words from subtitles using the `--removal-file` option. This is useful for filtering out profanity, unwanted text, or technical annotations.
+
+### Remove Specific Words
+
+Remove words listed in a file from translated subtitles:
+
+```bash
+srt-translate input.srt output.srt --removal-file remove_words.txt
+```
+
+### Word Removal File Format
+
+Create a text file with one word per line to remove:
+
+```
+damn
+shit
+hell
+stupid
+idiot
+```
+
+### Word Removal Examples
+
+#### Example Input (with profanity)
+
+```srt
+1
+00:00:01,000 --> 00:00:03,000
+This damn movie is stupid and hell.
+
+2
+00:00:04,000 --> 00:00:06,000
+What an idiot! That's so shit.
+
+3
+00:00:07,000 --> 00:00:09,000
+This is a normal line without bad words.
+```
+
+#### Example Output (after word removal)
+
+```srt
+1
+00:00:01,000 --> 00:00:03,000
+This movie is and.
+
+2
+00:00:04,000 --> 00:00:06,000
+What an! That's so.
+
+3
+00:00:07,000 --> 00:00:09,000
+This is a normal line without bad words.
+```
+
+### Common Use Cases
+
+- **Profanity Filtering**: Remove offensive language from subtitles
+- **Technical Cleanup**: Remove subtitle formatting codes like `{\an8}` or `[MUSIC]`
+- **Content Moderation**: Filter inappropriate content for different audiences
+- **Translation Cleanup**: Remove specific words that don't translate well
+
+### Combine with Translation and Glossary
+
+Use word removal alongside translation and glossary protection:
+
+```bash
+srt-translate input.srt output.srt \
+  --src en --tgt el \
+  --glossary anime_terms.txt --glossary-ci \
+  --removal-file profanity.txt
+```
+
+### Processing Order
+
+The tool processes subtitles in the following order:
+
+1. **Word Removal**: Remove specified words from original text
+2. **Glossary Protection**: Protect terms from translation
+3. **Translation**: Translate remaining text
+4. **Structure Restoration**: Restore formatting and timing
 
 ## Environment Variables
 

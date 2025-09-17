@@ -9,6 +9,7 @@ from tqdm import tqdm
 from .openai_client import OpenAITranslationClient
 from .placeholders import PlaceholderManager, load_glossary_file
 from .credits import CreditsDetector
+from .word_removal import WordRemover
 
 
 class SRTTranslator:
@@ -18,7 +19,9 @@ class SRTTranslator:
                  temperature: float = 0.2, top_p: float = 0.1,
                  glossary_file: Optional[str] = None, 
                  glossary_case_insensitive: bool = False,
-                 replace_credits: bool = True):
+                 replace_credits: bool = True,
+                 translator_name: str = "Ntamas",
+                 removal_file: Optional[str] = None):
         """Initialize the SRT translator.
         
         Args:
@@ -29,6 +32,8 @@ class SRTTranslator:
             glossary_file: Path to glossary file
             glossary_case_insensitive: Whether glossary matching is case-insensitive
             replace_credits: Whether to replace translator credits
+            translator_name: Name of the translator to use in credits
+            removal_file: Path to file containing words to completely remove
         """
         self.client = OpenAITranslationClient(api_key, model, temperature, top_p)
         
@@ -40,8 +45,10 @@ class SRTTranslator:
         self.placeholder_manager = PlaceholderManager(
             glossary_terms, glossary_case_insensitive
         )
-        self.credits_detector = CreditsDetector()
+        self.credits_detector = CreditsDetector(translator_name)
+        self.word_remover = WordRemover(removal_file)
         self.replace_credits = replace_credits
+        self.translator_name = translator_name
     
     def translate_file(self, input_path: str, output_path: str, 
                       src_lang: str, tgt_lang: str, 
@@ -161,6 +168,9 @@ class SRTTranslator:
             original_lines, self.replace_credits
         )
         
+        # Apply word removal
+        processed_lines = self.word_remover.process_subtitle_lines(processed_lines)
+        
         # Protect content and translate
         protected_lines = []
         all_replacements = {}
@@ -214,5 +224,5 @@ class SRTTranslator:
             index=max_index + 1,
             start=watermark_start,
             end=watermark_end,
-            content="Translated by Ntamas with AI"
+            content=f"Translated by {self.translator_name} with AI"
         )

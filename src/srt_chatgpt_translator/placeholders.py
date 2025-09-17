@@ -141,6 +141,38 @@ class PlaceholderManager:
         
         return protected_text
 
+    def contains_glossary_terms(self, text: str) -> bool:
+        """Check if text contains any glossary terms.
+        
+        Args:
+            text: Text to check for glossary terms
+            
+        Returns:
+            True if any glossary terms are found, False otherwise
+        """
+        if not self.glossary_terms:
+            return False
+        
+        # Create patterns for each glossary term
+        for term in self.glossary_terms:
+            if not term.strip():
+                continue
+            
+            # Escape special regex characters
+            escaped_term = re.escape(term)
+            
+            # Create pattern with word boundaries to avoid partial matches
+            if self.case_insensitive:
+                pattern = re.compile(r'\b' + escaped_term + r'\b', re.IGNORECASE)
+            else:
+                pattern = re.compile(r'\b' + escaped_term + r'\b')
+            
+            # Check if pattern matches
+            if pattern.search(text):
+                return True
+        
+        return False
+
 
 def load_glossary_file(filepath: str) -> List[str]:
     """Load glossary terms from a file.

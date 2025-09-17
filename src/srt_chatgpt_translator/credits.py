@@ -7,8 +7,12 @@ from typing import List, Pattern
 class CreditsDetector:
     """Detects and handles translator credit lines in SRT subtitles."""
     
-    def __init__(self):
-        """Initialize the credits detector with patterns for various languages."""
+    def __init__(self, translator_name: str = "Ntamas"):
+        """Initialize the credits detector with patterns for various languages.
+        
+        Args:
+            translator_name: Name of the translator to use in credit replacement
+        """
         # English patterns
         english_patterns = [
             r'\btranslated?\s+by\b',
@@ -36,7 +40,7 @@ class CreditsDetector:
         ]
         
         # Replacement text
-        self.replacement_text = "Translated by Ntamas with AI"
+        self.replacement_text = f"Translated by {translator_name} with AI"
     
     def is_credit_line(self, text: str) -> bool:
         """Check if a text line appears to be a translator credit.

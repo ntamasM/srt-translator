@@ -39,10 +39,10 @@ class TestPlaceholderManager:
         # Should contain placeholders instead of entities
         assert "&amp;" not in protected
         assert "&lt;" not in protected
-        assert "HTMLENTITY_" in protected
+        assert "__HE" in protected
         
         # Should have correct number of replacements
-        entity_replacements = {k: v for k, v in replacements.items() if "HTMLENTITY_" in k}
+        entity_replacements = {k: v for k, v in replacements.items() if "__HE" in k}
         assert len(entity_replacements) == 2
         assert "&amp;" in entity_replacements.values()
         assert "&lt;" in entity_replacements.values()

@@ -80,3 +80,9 @@ Thumbs.db
 *.srt.bak
 translated/
 output/
+
+# Data files
+data/
+data_*.zip
+data_*.tar.gz
+data_*.7z

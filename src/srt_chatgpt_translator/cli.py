@@ -27,6 +27,9 @@ Examples:
   # Use a custom glossary file
   srt-translate input.srt output.srt --glossary terms.txt --glossary-ci
 
+  # Remove specific words and set translator name
+  srt-translate input.srt output.srt --removal-file remove_words.txt --translator-name "John"
+
   # Batch process all SRT files in a directory
   srt-translate --input-dir ./subs --output-dir ./translated
 
@@ -99,6 +102,19 @@ Examples:
         help="Case-insensitive glossary matching"
     )
     
+    # Word removal options
+    parser.add_argument(
+        "--removal-file",
+        help="Path to file containing words to completely remove (one word per line)"
+    )
+    
+    # Translator name option
+    parser.add_argument(
+        "--translator-name",
+        default="Ntamas",
+        help="Name of the translator to use in credits (default: Ntamas)"
+    )
+    
     # Credits handling
     parser.add_argument(
         "--replace-credits",
@@ -156,6 +172,10 @@ def validate_args(args: argparse.Namespace) -> None:
     if args.glossary and not os.path.exists(args.glossary):
         print(f"Warning: Glossary file does not exist: {args.glossary}")
     
+    # Check removal file
+    if args.removal_file and not os.path.exists(args.removal_file):
+        print(f"Warning: Removal file does not exist: {args.removal_file}")
+    
     # Validate numeric parameters
     if args.temperature < 0 or args.temperature > 2:
         print("Error: Temperature must be between 0 and 2")
@@ -201,7 +221,9 @@ def main() -> None:
             top_p=args.top_p,
             glossary_file=args.glossary,
             glossary_case_insensitive=args.glossary_ci,
-            replace_credits=args.replace_credits
+            replace_credits=args.replace_credits,
+            translator_name=args.translator_name,
+            removal_file=args.removal_file
         )
     except Exception as e:
         print(f"Error initializing translator: {e}")
