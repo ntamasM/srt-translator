@@ -217,9 +217,12 @@ srt-translate --input-dir ./subtitles --output-dir ./translated [options]
 
 #### Removal File Format
 
-- One word per line to remove
+- One word or pattern per line to remove
 - Case-insensitive matching
-- Removes whole words only (uses word boundaries)
+- **Smart Pattern Matching**:
+  - Normal words: Uses word boundaries (removes "word" from "word text" but not from "password")
+  - Special patterns (containing symbols): Removes pattern anywhere it appears (removes `{\an8}` from `{\an8}text`)
+- Supports subtitle formatting codes like `{\an8}`, `[MUSIC]`, etc.
 
 ## Glossary File Format
 
@@ -253,7 +256,7 @@ srt-translate input.srt output.srt --removal-file remove_words.txt
 
 ### Word Removal File Format
 
-Create a text file with one word per line to remove:
+Create a text file with one word or pattern per line to remove:
 
 ```
 damn
@@ -261,16 +264,18 @@ shit
 hell
 stupid
 idiot
+{\an8}
+[MUSIC]
 ```
 
 ### Word Removal Examples
 
-#### Example Input (with profanity)
+#### Example Input (with profanity and formatting codes)
 
 ```srt
 1
 00:00:01,000 --> 00:00:03,000
-This damn movie is stupid and hell.
+{\an8}This damn movie is stupid and hell.
 
 2
 00:00:04,000 --> 00:00:06,000
@@ -278,6 +283,10 @@ What an idiot! That's so shit.
 
 3
 00:00:07,000 --> 00:00:09,000
+[MUSIC]Background music{\an8}continues.
+
+4
+00:00:10,000 --> 00:00:12,000
 This is a normal line without bad words.
 ```
 
@@ -294,8 +303,14 @@ What an! That's so.
 
 3
 00:00:07,000 --> 00:00:09,000
+Background musiccontinues.
+
+4
+00:00:10,000 --> 00:00:12,000
 This is a normal line without bad words.
 ```
+
+**Note**: The tool intelligently handles both regular words (with word boundaries) and special patterns like `{\an8}` that may be attached to other text.
 
 ### Common Use Cases
 

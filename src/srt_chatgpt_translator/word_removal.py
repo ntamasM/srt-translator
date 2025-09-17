@@ -49,14 +49,20 @@ class WordRemover:
         # Create a copy to work with
         result = text
         
-        # Remove each word (case-insensitive, whole words only)
+        # Remove each word (case-insensitive)
         for word in self.removal_words:
             # Escape special regex characters in the word
             escaped_word = re.escape(word)
-            # Create pattern for whole word matching (case-insensitive)
-            pattern = r'\b' + escaped_word + r'\b'
-            # Remove the word and any extra whitespace it leaves behind
-            result = re.sub(pattern, '', result, flags=re.IGNORECASE)
+            
+            # For patterns that contain non-alphanumeric characters (like {\an8}),
+            # use simple string matching instead of word boundaries
+            if re.search(r'[^\w\s]', word):
+                # Remove the pattern anywhere it appears (case-insensitive)
+                result = re.sub(escaped_word, '', result, flags=re.IGNORECASE)
+            else:
+                # For normal words, use word boundaries to avoid partial matches
+                pattern = r'\b' + escaped_word + r'\b'
+                result = re.sub(pattern, '', result, flags=re.IGNORECASE)
         
         # Clean up multiple spaces and punctuation issues
         result = re.sub(r'\s+', ' ', result)  # Multiple spaces to single space
