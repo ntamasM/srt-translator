@@ -37,6 +37,8 @@ cp .env.example .env
 
 ## 📁 Recommended Data Structure
 
+create on the root folder the bellow Data Structure
+
 ```
 data/
 ├── subtitles/          # Source SRT files to translate
