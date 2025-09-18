@@ -24,8 +24,8 @@ Examples:
   # Specify source and target languages explicitly
   srt-translate input.srt output.srt --src en --tgt el
 
-  # Use a custom glossary file
-  srt-translate input.srt output.srt --glossary terms.txt --glossary-ci
+  # Use a custom matching file
+  srt-translate input.srt output.srt --matching terms.txt --matching-ci
 
   # Remove specific words and set translator name
   srt-translate input.srt output.srt --removal-file remove_words.txt --translator-name "John"
@@ -33,8 +33,8 @@ Examples:
   # Batch process all SRT files in a directory
   srt-translate --input-dir ./subs --output-dir ./translated
 
-  # Use a different model and append watermark
-  srt-translate input.srt output.srt --model gpt-4 --append-watermark
+  # Use a different model and append credits at the end
+  srt-translate input.srt output.srt --model gpt-4 --append-credits-at-the-end
         """
     )
     
@@ -91,15 +91,15 @@ Examples:
         help="Top-p sampling parameter (default: 0.1)"
     )
     
-    # Glossary options
+    # Matching options
     parser.add_argument(
-        "--glossary",
-        help="Path to glossary file (one term per line)"
+        "--matching",
+        help="Path to matching file (one term per line) - replaces translated terms"
     )
     parser.add_argument(
-        "--glossary-ci",
+        "--matching-ci",
         action="store_true",
-        help="Case-insensitive glossary matching"
+        help="Case-insensitive matching"
     )
     
     # Word removal options
@@ -117,43 +117,26 @@ Examples:
     
     # Credits handling
     parser.add_argument(
-        "--replace-credits",
+        "--replace-old-credits",
         action="store_true",
         default=True,
-        help="Replace translator credits with standard text (default: enabled)"
-    )
-    parser.add_argument(
-        "--no-replace-credits",
-        action="store_false",
-        dest="replace_credits",
-        help="Do not replace translator credits"
-    )
-    
-    # Watermark option
-    parser.add_argument(
-        "--append-watermark",
-        action="store_true",
-        help="Append watermark cue at the end (default: disabled)"
-    )
-    parser.add_argument(
-        "--no-append-watermark",
-        action="store_false",
-        dest="append_watermark",
-        help="Do not append watermark cue (default)"
+        help="Replace existing translator credits with standard text (default: enabled)"
     )
     
     # Smart credits option
     parser.add_argument(
-        "--add-credits",
+        "--add-new-credits",
         action="store_true",
         default=True,
         help="Intelligently add translator credits in gaps or at end (default: enabled)"
     )
+    
+    # End credits option
     parser.add_argument(
-        "--no-add-credits",
-        action="store_false",
-        dest="add_credits",
-        help="Do not add translator credits automatically"
+        "--append-credits-at-the-end",
+        action="store_true",
+        default=False,
+        help="Append credits at the end instead of finding gaps (default: disabled)"
     )
     
     return parser
@@ -182,9 +165,9 @@ def validate_args(args: argparse.Namespace) -> None:
             print(f"Error: Input path is not a directory: {args.input_dir}")
             sys.exit(1)
     
-    # Check glossary file
-    if args.glossary and not os.path.exists(args.glossary):
-        print(f"Warning: Glossary file does not exist: {args.glossary}")
+    # Check matching file
+    if args.matching and not os.path.exists(args.matching):
+        print(f"Warning: Matching file does not exist: {args.matching}")
     
     # Check removal file
     if args.removal_file and not os.path.exists(args.removal_file):
@@ -233,9 +216,9 @@ def main() -> None:
             model=args.model,
             temperature=args.temperature,
             top_p=args.top_p,
-            glossary_file=args.glossary,
-            glossary_case_insensitive=args.glossary_ci,
-            replace_credits=args.replace_credits,
+            matching_file=args.matching,
+            matching_case_insensitive=args.matching_ci,
+            replace_credits=args.replace_old_credits,
             translator_name=args.translator_name,
             removal_file=args.removal_file
         )
@@ -252,8 +235,8 @@ def main() -> None:
                 output_path=args.output_file,
                 src_lang=args.src,
                 tgt_lang=args.tgt,
-                append_watermark=args.append_watermark,
-                add_credits=args.add_credits
+                add_credits=args.add_new_credits,
+                append_credits_at_end=args.append_credits_at_the_end
             )
         else:
             # Batch mode
@@ -262,8 +245,8 @@ def main() -> None:
                 output_dir=args.output_dir,
                 src_lang=args.src,
                 tgt_lang=args.tgt,
-                append_watermark=args.append_watermark,
-                add_credits=args.add_credits
+                add_credits=args.add_new_credits,
+                append_credits_at_end=args.append_credits_at_the_end
             )
     except KeyboardInterrupt:
         print("\nTranslation interrupted by user")

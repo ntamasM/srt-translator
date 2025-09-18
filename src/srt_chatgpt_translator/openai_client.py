@@ -91,7 +91,6 @@ class OpenAITranslationClient:
                         "CRITICAL: Return exactly the same number of lines as provided. "
                         "Do not add, remove, merge, or split lines. "
                         "Preserve all placeholders exactly as they appear. "
-                        "IMPORTANT: Do NOT translate terms like GLOSSARYTERM_0, GLOSSARYTERM_1, etc. Keep them exactly as they are. "
                         "If a line is empty or contains only whitespace, keep it empty."
                     )
                 },
@@ -132,8 +131,7 @@ class OpenAITranslationClient:
                         f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
                         "Each line is prefixed with [N]. Keep the [N] prefix but translate the content after it. "
                         "CRITICAL: Return exactly the same number of lines as provided. "
-                        "Preserve all placeholders exactly as they appear. "
-                        "IMPORTANT: Do NOT translate terms like GLOSSARYTERM_0, GLOSSARYTERM_1, etc. Keep them exactly as they are."
+                        "Preserve all placeholders exactly as they appear."
                     )
                 },
                 {"role": "user", "content": prompt}
@@ -206,8 +204,7 @@ class OpenAITranslationClient:
                     "content": (
                         f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
                         "Return exactly one translated line. "
-                        "Preserve all placeholders exactly as they appear. "
-                        "IMPORTANT: Do NOT translate terms like GLOSSARYTERM_0, GLOSSARYTERM_1, etc. Keep them exactly as they are."
+                        "Preserve all placeholders exactly as they appear."
                     )
                 },
                 {"role": "user", "content": prompt}
@@ -244,8 +241,7 @@ class OpenAITranslationClient:
 {lines_json}
 
 IMPORTANT INSTRUCTIONS:
-- Do NOT translate any terms that look like GLOSSARYTERM_0, GLOSSARYTERM_1, GLOSSARYTERM_2, etc.
-- Keep these placeholder terms exactly as they are
-- Only translate the other words around them
+- Preserve all placeholders exactly as they appear
+- Only translate the actual text content
 
 Return the translation as a JSON object with "lines_translated" array containing exactly {len(lines)} strings."""

@@ -7,7 +7,7 @@ from typing import List, Optional
 from tqdm import tqdm
 
 from .openai_client import OpenAITranslationClient
-from .placeholders import PlaceholderManager, load_glossary_file
+from .placeholders import PlaceholderManager, load_matching_file, load_replacement_mapping
 from .credits import CreditsDetector
 from .word_removal import WordRemover
 
@@ -17,8 +17,8 @@ class SRTTranslator:
     
     def __init__(self, api_key: str, model: str = "gpt-4o-mini", 
                  temperature: float = 0.2, top_p: float = 0.1,
-                 glossary_file: Optional[str] = None, 
-                 glossary_case_insensitive: bool = False,
+                 matching_file: Optional[str] = None, 
+                 matching_case_insensitive: bool = False,
                  replace_credits: bool = True,
                  translator_name: str = "Ntamas",
                  removal_file: Optional[str] = None):
@@ -29,21 +29,23 @@ class SRTTranslator:
             model: Model to use for translation
             temperature: Sampling temperature
             top_p: Top-p sampling parameter
-            glossary_file: Path to glossary file
-            glossary_case_insensitive: Whether glossary matching is case-insensitive
+            matching_file: Path to matching file
+            matching_case_insensitive: Whether matching should be case-insensitive
             replace_credits: Whether to replace translator credits
             translator_name: Name of the translator to use in credits
             removal_file: Path to file containing words to completely remove
         """
         self.client = OpenAITranslationClient(api_key, model, temperature, top_p)
         
-        # Load glossary terms
-        glossary_terms = []
-        if glossary_file and os.path.exists(glossary_file):
-            glossary_terms = load_glossary_file(glossary_file)
+        # Load matching terms and replacement mapping
+        matching_terms = []
+        replacement_mapping = {}
+        if matching_file and os.path.exists(matching_file):
+            matching_terms = load_matching_file(matching_file)
+            replacement_mapping = load_replacement_mapping(matching_file)
         
         self.placeholder_manager = PlaceholderManager(
-            glossary_terms, glossary_case_insensitive
+            matching_terms, matching_case_insensitive, replacement_mapping
         )
         self.credits_detector = CreditsDetector(translator_name)
         self.word_remover = WordRemover(removal_file)
@@ -52,8 +54,8 @@ class SRTTranslator:
     
     def translate_file(self, input_path: str, output_path: str, 
                       src_lang: str, tgt_lang: str, 
-                      append_watermark: bool = False,
-                      add_credits: bool = True) -> None:
+                      add_credits: bool = True,
+                      append_credits_at_end: bool = False) -> None:
         """Translate an SRT file.
         
         Args:
@@ -61,8 +63,8 @@ class SRTTranslator:
             output_path: Path to output SRT file
             src_lang: Source language code
             tgt_lang: Target language code
-            append_watermark: Whether to append watermark cue at the end (legacy)
             add_credits: Whether to intelligently add credits (default: True)
+            append_credits_at_end: Whether to force credits at the end instead of finding gaps (default: False)
         """
         # Read and parse SRT file
         try:
@@ -89,11 +91,13 @@ class SRTTranslator:
         
         # Add credits intelligently (either in a gap or at the end)
         if add_credits:
-            translated_subtitles = self._insert_credits_smartly(translated_subtitles)
-        elif append_watermark:
-            # Legacy watermark support
-            watermark_cue = self._create_watermark_cue(translated_subtitles)
-            translated_subtitles.append(watermark_cue)
+            if append_credits_at_end:
+                # Force credits at the end
+                watermark_cue = self._create_watermark_cue(translated_subtitles)
+                translated_subtitles.append(watermark_cue)
+            else:
+                # Smart insertion (try gaps first, then end)
+                translated_subtitles = self._insert_credits_smartly(translated_subtitles)
         
         # Generate output SRT content
         output_content = srt.compose(translated_subtitles, reindex=False)
@@ -112,8 +116,8 @@ class SRTTranslator:
     
     def translate_directory(self, input_dir: str, output_dir: str,
                            src_lang: str, tgt_lang: str,
-                           append_watermark: bool = False,
-                           add_credits: bool = True) -> None:
+                           add_credits: bool = True,
+                           append_credits_at_end: bool = False) -> None:
         """Translate all SRT files in a directory.
         
         Args:
@@ -121,8 +125,8 @@ class SRTTranslator:
             output_dir: Output directory path
             src_lang: Source language code
             tgt_lang: Target language code
-            append_watermark: Whether to append watermark cue at the end (legacy)
             add_credits: Whether to intelligently add credits (default: True)
+            append_credits_at_end: Whether to force credits at the end instead of finding gaps (default: False)
         """
         input_path = Path(input_dir)
         output_path = Path(output_dir)
@@ -150,7 +154,7 @@ class SRTTranslator:
             try:
                 self.translate_file(
                     input_file_path, output_file_path, 
-                    src_lang, tgt_lang, append_watermark, add_credits
+                    src_lang, tgt_lang, add_credits, append_credits_at_end
                 )
             except Exception as e:
                 print(f"Error processing {srt_file.name}: {e}")
@@ -202,12 +206,18 @@ class SRTTranslator:
             restored_line = self.placeholder_manager.restore_text(line, all_replacements)
             restored_lines.append(restored_line)
         
+        # Apply word replacements from matching file
+        final_lines = []
+        for line in restored_lines:
+            replaced_line = self.placeholder_manager.apply_replacements(line)
+            final_lines.append(replaced_line)
+        
         # Create new subtitle with translated content
         return srt.Subtitle(
             index=subtitle.index,
             start=subtitle.start,
             end=subtitle.end,
-            content='\n'.join(restored_lines)
+            content='\n'.join(final_lines)
         )
     
     def _create_watermark_cue(self, existing_subtitles: List[srt.Subtitle]) -> srt.Subtitle:

@@ -9,26 +9,26 @@ from srt_chatgpt_translator.placeholders import PlaceholderManager
 import srt
 from datetime import timedelta
 
-def test_contains_glossary_terms():
-    """Test the contains_glossary_terms method."""
+def test_contains_matching_terms():
+    """Test the contains_matching_terms method."""
     # Create a placeholder manager with some test terms
-    glossary_terms = ["Tanjiro", "Nezuko", "Demon Slayer", "Hashira"]
-    manager = PlaceholderManager(glossary_terms, case_insensitive=True)
+    matching_terms = ["Tanjiro", "Nezuko", "Demon Slayer", "Hashira"]
+    manager = PlaceholderManager(matching_terms, case_insensitive=True)
     
     # Test cases
     test_cases = [
         ("Hello Tanjiro, how are you?", True),  # Contains Tanjiro
         ("Nezuko is sleeping.", True),  # Contains Nezuko
         ("The Demon Slayer Corps is strong.", True),  # Contains "Demon Slayer"
-        ("Hello world", False),  # No glossary terms
-        ("This is a normal sentence.", False),  # No glossary terms
+        ("Hello world", False),  # No matching terms
+        ("This is a normal sentence.", False),  # No matching terms
         ("tanjiro is here", True),  # Case insensitive test
         ("NEZUKO IS SLEEPING", True),  # Case insensitive test
     ]
     
-    print("Testing contains_glossary_terms method:")
+    print("Testing contains_matching_terms method:")
     for text, expected in test_cases:
-        result = manager.contains_glossary_terms(text)
+        result = manager.contains_matching_terms(text)
         status = "✓" if result == expected else "✗"
         print(f"{status} '{text}' -> {result} (expected {expected})")
         
@@ -58,10 +58,10 @@ def test_placeholder_protection():
         # Test restoration
         restored = manager.restore_text(protected, replacements)
         
-        contains_glossary = manager.contains_glossary_terms(text)
+        contains_matching = manager.contains_matching_terms(text)
         
         print(f"Text: '{text}'")
-        print(f"  Contains glossary: {contains_glossary}")
+        print(f"  Contains matching: {contains_matching}")
         print(f"  Protected: '{protected}'")
         print(f"  Replacements: {len(replacements)} items")
         print(f"  Restored: '{restored}'")
@@ -111,38 +111,38 @@ def test_integration_with_subtitle():
             original_lines, True
         )
         
-        # Check if any line contains glossary terms
-        contains_glossary = any(
-            manager.contains_glossary_terms(line) 
+        # Check if any line contains matching terms
+        contains_matching = any(
+            manager.contains_matching_terms(line) 
             for line in processed_lines
         )
         
         print(f"Subtitle {subtitle.index}: '{subtitle.content}'")
-        print(f"  Contains glossary terms: {contains_glossary}")
+        print(f"  Contains matching terms: {contains_matching}")
         
-        if contains_glossary:
-            print(f"  ✓ Will translate with glossary terms protected")
+        if contains_matching:
+            print(f"  ✓ Will translate with matching terms protected")
         else:
-            print(f"  ✓ Will translate normally (no glossary terms to protect)")
+            print(f"  ✓ Will translate normally (no matching terms to protect)")
     
     return True
 
 if __name__ == "__main__":
-    print("Testing glossary protection functionality...")
+    print("Testing matching protection functionality...")
     print("=" * 60)
     
     success = True
     
     try:
-        success &= test_contains_glossary_terms()
+        success &= test_contains_matching_terms()
         success &= test_placeholder_protection()
         success &= test_integration_with_subtitle()
         
         print("\n" + "=" * 60)
         if success:
-            print("✓ All tests passed! Glossary protection is working correctly.")
+            print("✓ All tests passed! Matching protection is working correctly.")
             print("\nExpected behavior:")
-            print("• Glossary terms (like 'Tanjiro', 'Nezuko') are protected during translation")
+            print("• Matching terms (like 'Tanjiro', 'Nezuko') are protected during translation")
             print("• Other words are translated by ChatGPT")
             print("• Example: 'Hello Tanjiro' → 'Γειά σου Tanjiro'")
         else:
