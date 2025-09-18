@@ -1,6 +1,24 @@
-# SRT ChatGPT Translator
+# 🎬 SRT ChatGPT Translator
 
 A production-ready Python CLI tool that translates SubRip (.srt) subtitle files using OpenAI's API while preserving exact structure, timing, and formatting.
+
+## 📋 Table of Contents
+
+- [🚀 Key Features](#-key-features)
+- [⚙️ Installation & Setup](#️-installation--setup)
+- [🚀 Quick Start Scripts](#-quick-start-scripts)
+- [💻 Command Line Usage](#-command-line-usage)
+- [🔧 Environment Variables](#-environment-variables)
+- [⚡ How It Works](#-how-it-works)
+  - [🔄 Word Replacement System](#-word-replacement-system)
+  - [🗑️ Word Removal](#️-word-removal)
+  - [📝 Smart Credits Management](#-smart-credits-management)
+  - [🔄 Processing Order](#-processing-order)
+- [📝 Complete Example](#-complete-example)
+- [🛠️ Error Handling](#️-error-handling)
+- [📋 Requirements](#-requirements)
+- [🧪 Development](#-development)
+- [📄 License](#-license)
 
 ## 🚀 Key Features
 
@@ -13,9 +31,9 @@ A production-ready Python CLI tool that translates SubRip (.srt) subtitle files 
 - **Batch Processing**: Process entire directories of SRT files
 - **Robust Error Handling**: Multiple retry strategies with graceful fallbacks
 
-## Installation & Setup
+## ⚙️ Installation & Setup
 
-### 1. Clone and Install
+### 1️⃣ Clone and Install
 
 ```bash
 git clone https://github.com/ntamasM/srt-translator.git
@@ -23,14 +41,14 @@ cd srt-translator
 pip install -e .
 ```
 
-### 2. Set up your OpenAI API key
+### 2️⃣ Set up your OpenAI API key
 
 ```bash
 cp .env.example .env
 # Edit .env and set your OPENAI_API_KEY
 ```
 
-### 3. Create the recommended data structure
+### 3️⃣ Create the recommended data structure
 
 Create the following folder structure in the root directory:
 
@@ -42,17 +60,17 @@ data/
 └── remove/            # Word removal files
 ```
 
-## Quick Start Scripts
+## 🚀 Quick Start Scripts
 
 For convenience, the repository includes ready-to-use scripts for batch translation:
 
-### Windows Users (`run_translation.ps1`)
+### 🪟 Windows Users (`run_translation.ps1`)
 
 ```powershell
 .\run_translation.ps1
 ```
 
-### Linux/Mac Users (`run_translation.sh`)
+### 🐧 Linux/Mac Users (`run_translation.sh`)
 
 ```bash
 ./run_translation.sh
@@ -63,37 +81,37 @@ Both scripts automatically:
 - Translate ALL SRT files in `data\subtitles\` directory
 - Output translated files to `data\translated\` directory
 - Use English to Greek translation with matching terms
-- Apply case-insensitive matching from `data\matching\DemonSlayerToEl.txt`
+- Apply case-insensitive matching from `data\matching\animeMatchingToEl.txt`
 
-### Before Running Scripts
+### ⚠️ Before Running Scripts
 
-1. **Set up your API key**: Make sure your OpenAI API key is configured in the `.env` file
-2. **Prepare your files**: Place your SRT files in the `data/subtitles/` directory
-3. **Customize if needed**: Edit the script files to change source/target languages, matching files, or other parameters
+1. **🔑 Set up your API key**: Make sure your OpenAI API key is configured in the `.env` file
+2. **📁 Prepare your files**: Place your SRT files in the `data/subtitles/` directory
+3. **🔧 Customize if needed**: Edit the script files to change source/target languages, matching files, or other parameters
 
-## Command Line Usage
+## 💻 Command Line Usage
 
-### Basic Commands
+### 📝 Basic Commands
 
-#### Single File Translation
+#### 📄 Single File Translation
 
 ```bash
 srt-translate input.srt output.srt
 ```
 
-#### Batch Processing
+#### 📦 Batch Processing
 
 ```bash
 srt-translate --input-dir ./subtitles --output-dir ./translated
 ```
 
-#### With Word Replacement
+#### 🔄 With Word Replacement
 
 ```bash
 srt-translate input.srt output.srt --matching anime_terms.txt
 ```
 
-#### Complete Example
+#### 🎯 Complete Example
 
 ```bash
 srt-translate input.srt output.srt \
@@ -103,9 +121,9 @@ srt-translate input.srt output.srt \
   --translator-name "Your Name"
 ```
 
-### Command Line Options
+### ⚙️ Command Line Options
 
-#### Positional Arguments
+#### 📋 Positional Arguments
 
 | Argument      | Required | Description                                        |
 | ------------- | -------- | -------------------------------------------------- |
@@ -114,7 +132,7 @@ srt-translate input.srt output.srt \
 
 \*Either use `input_file`/`output_file` for single file mode OR `--input-dir`/`--output-dir` for batch mode.
 
-#### Optional Arguments
+#### 🛠️ Optional Arguments
 
 | Option                        | Default       | Type   | Description                                   |
 | ----------------------------- | ------------- | ------ | --------------------------------------------- |
@@ -133,7 +151,7 @@ srt-translate input.srt output.srt \
 | `--add-new-credits`           | True          | Flag   | Intelligently add translator credits          |
 | `--append-credits-at-the-end` | False         | Flag   | Force credits at end instead of finding gaps  |
 
-## Environment Variables
+## 🔧 Environment Variables
 
 Set your OpenAI API key in a `.env` file or environment:
 
@@ -141,19 +159,19 @@ Set your OpenAI API key in a `.env` file or environment:
 OPENAI_API_KEY=your_api_key_here
 ```
 
-## How It Works
+## ⚡ How It Works
 
-### Word Replacement System
+### 🔄 Word Replacement System
 
 The matching system supports **post-translation word replacement** using a simple `source --> target` format:
 
-#### Process Flow
+#### 🔄 Process Flow
 
 1. **Translation First**: AI translates the subtitle normally
-2. **Word Replacement**: After translation, specific terms are replaced using your matching file
-3. **Intelligent Matching**: Uses word boundaries to avoid partial replacements
+2. **🔄 Word Replacement**: After translation, specific terms are replaced using your matching file
+3. **🎯 Intelligent Matching**: Uses word boundaries to avoid partial replacements
 
-#### Matching File Format
+#### 📄 Matching File Format
 
 Create a text file with `source --> target` format:
 
@@ -173,7 +191,7 @@ Tanjiro --> Tanjiro
 Nezuko --> Nezuko
 ```
 
-#### Example Process
+#### 💡 Example Process
 
 **Original**: "The Demon Slayer Corps uses Water Breathing techniques."
 
@@ -181,11 +199,11 @@ Nezuko --> Nezuko
 
 **Step 2 - Word Replacement**: "Το Σώμα Εξολοθρευτών Δαιμόνων χρησιμοποιεί τεχνικές Αναπνοή του Νερού."
 
-### Word Removal
+### 🗑️ Word Removal
 
 Remove unwanted words or patterns from subtitles using the `--removal-file` option:
 
-#### Removal File Format
+#### 📄 Removal File Format
 
 ```
 damn
@@ -195,40 +213,40 @@ hell
 [MUSIC]
 ```
 
-#### Smart Pattern Matching
+#### 🎯 Smart Pattern Matching
 
-- **Normal words**: Uses word boundaries (removes "word" from "word text" but not from "password")
-- **Special patterns**: Removes pattern anywhere it appears (removes `{\an8}` from `{\an8}text`)
+- **📝 Normal words**: Uses word boundaries (removes "word" from "word text" but not from "password")
+- **🔧 Special patterns**: Removes pattern anywhere it appears (removes `{\an8}` from `{\an8}text`)
 
-### Smart Credits Management
+### 📝 Smart Credits Management
 
-#### Credit Options
+#### ⚙️ Credit Options
 
 - **`--replace-old-credits`** (default: True): Replaces existing translator credits with yours
 - **`--add-new-credits`** (default: True): Intelligently adds translator credits
 - **`--append-credits-at-the-end`** (default: False): Forces credits at the end
 
-#### How It Works
+#### ⚡ How It Works
 
-1. **Gap Analysis**: Analyzes timing gaps between subtitles (≥5 seconds)
-2. **Optimal Placement**: Inserts credits in the largest suitable gap
-3. **Fallback**: If no suitable gap exists, credits are added at the end
-4. **Force End Option**: Use `--append-credits-at-the-end` to always put credits at the end
+1. **📊 Gap Analysis**: Analyzes timing gaps between subtitles (≥5 seconds)
+2. **🎯 Optimal Placement**: Inserts credits in the largest suitable gap
+3. **🔄 Fallback**: If no suitable gap exists, credits are added at the end
+4. **⚙️ Force End Option**: Use `--append-credits-at-the-end` to always put credits at the end
 
-### Processing Order
+### 🔄 Processing Order
 
 The tool processes subtitles in the following order:
 
-1. **Credit Replacement**: Replace existing translator credits (if enabled)
-2. **Word Removal**: Remove specified words from original text
-3. **Translation**: Translate remaining text using OpenAI
-4. **Word Replacement**: Apply word replacements from matching file
-5. **Structure Restoration**: Restore formatting and timing
-6. **Smart Credits Insertion**: Add translator credits in optimal location
+1. **🔄 Credit Replacement**: Replace existing translator credits (if enabled)
+2. **🗑️ Word Removal**: Remove specified words from original text
+3. **🌐 Translation**: Translate remaining text using OpenAI
+4. **🔄 Word Replacement**: Apply word replacements from matching file
+5. **🏗️ Structure Restoration**: Restore formatting and timing
+6. **📝 Smart Credits Insertion**: Add translator credits in optimal location
 
-## Complete Example
+## 📝 Complete Example
 
-### Input File (`sample.srt`)
+### 📄 Input File (`sample.srt`)
 
 ```srt
 1
@@ -244,14 +262,14 @@ Character says: "Thank you, sensei!" about Water Breathing.
 Translated by Original Translator
 ```
 
-### Matching File (`anime_terms.txt`)
+### 📄 Matching File (`anime_terms.txt`)
 
 ```
 Demon Slayer Corps --> Σώμα Εξολοθρευτών Δαιμόνων
 Water Breathing --> Αναπνοή του Νερού
 ```
 
-### Command
+### 💻 Command
 
 ```bash
 srt-translate sample.srt output.srt \
@@ -259,7 +277,7 @@ srt-translate sample.srt output.srt \
   --translator-name "Ntamas"
 ```
 
-### Output File (`output.srt`)
+### 📄 Output File (`output.srt`)
 
 ```srt
 1
@@ -275,31 +293,31 @@ srt-translate sample.srt output.srt \
 Translated by Ntamas with AI
 ```
 
-## Error Handling
+## 🛠️ Error Handling
 
 The tool implements multiple retry strategies:
 
-1. **Batch Translation**: Attempts to translate all lines in one API call
-2. **Indexed Translation**: Adds line numbers to help model maintain structure
-3. **Line-by-Line Fallback**: Translates each line individually if batch fails
+1. **📦 Batch Translation**: Attempts to translate all lines in one API call
+2. **📝 Indexed Translation**: Adds line numbers to help model maintain structure
+3. **📄 Line-by-Line Fallback**: Translates each line individually if batch fails
 
 If translation fails completely, the original line is preserved.
 
-## Requirements
+## 📋 Requirements
 
 - Python 3.9+
 - OpenAI API key
 - Dependencies: `openai`, `srt`, `python-dotenv`, `tqdm`
 
-## Development
+## 🧪 Development
 
-### Running Tests
+### 🧪 Running Tests
 
 ```bash
 pytest
 ```
 
-### Project Structure
+### 📁 Project Structure
 
 ```
 src/srt_chatgpt_translator/
@@ -312,6 +330,6 @@ src/srt_chatgpt_translator/
 └── word_removal.py     # Word removal functionality
 ```
 
-## License
+## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
