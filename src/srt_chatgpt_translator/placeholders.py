@@ -20,13 +20,6 @@ class PlaceholderManager:
         self.matching_terms = set(matching_terms or [])
         self.replacement_mapping = replacement_mapping or {}
         
-        # Add default anime honorifics
-        default_honorifics = {
-            "-san", "-kun", "-chan", "-sama", "senpai", "sensei", 
-            "-senpai", "-sensei", "onii-chan", "onee-chan", "onii-san", "onee-san"
-        }
-        self.matching_terms.update(default_honorifics)
-        
         # If case insensitive, create lowercase lookup set
         if self.case_insensitive:
             self.matching_lookup = {term.lower() for term in self.matching_terms}

@@ -75,6 +75,39 @@ srt-translate input.srt output.srt \
   --translator-name "Your Name"
 ```
 
+## Quick Start Scripts
+
+For convenience, the repository includes ready-to-use scripts for batch translation:
+
+### Windows Users (`run_translation.ps1`)
+
+```powershell
+.\run_translation.ps1
+```
+
+This PowerShell script automatically:
+
+- Translates ALL SRT files in `data\subtitles\` directory
+- Outputs translated files to `data\translated\` directory
+- Uses English to Greek translation with matching terms
+- Applies case-insensitive matching from `data\matching\DemonSlayerToEl.txt`
+
+### Linux/Mac Users (`run_translation.sh`)
+
+```bash
+./run_translation.sh
+```
+
+This bash script performs the same batch translation as the PowerShell version.
+
+### Before Running Scripts
+
+1. **Set up your API key**: Make sure your OpenAI API key is configured in the `.env` file
+2. **Prepare your files**: Place your SRT files in the `data/subtitles/` directory
+3. **Customize if needed**: Edit the script files to change source/target languages, matching files, or other parameters
+
+The scripts use the recommended data structure and will process all SRT files in the subtitles directory automatically.
+
 ## Command Line Options
 
 ### Positional Arguments

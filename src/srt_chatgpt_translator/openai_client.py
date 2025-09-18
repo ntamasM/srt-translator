@@ -91,6 +91,7 @@ class OpenAITranslationClient:
                         "CRITICAL: Return exactly the same number of lines as provided. "
                         "Do not add, remove, merge, or split lines. "
                         "Preserve all placeholders exactly as they appear. "
+                        "DO NOT translate any text matching these patterns: MATCHINGTERM_{}, HTMLENTITY_{}, HTMLTAG_{}. "
                         "If a line is empty or contains only whitespace, keep it empty."
                     )
                 },
@@ -131,7 +132,8 @@ class OpenAITranslationClient:
                         f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
                         "Each line is prefixed with [N]. Keep the [N] prefix but translate the content after it. "
                         "CRITICAL: Return exactly the same number of lines as provided. "
-                        "Preserve all placeholders exactly as they appear."
+                        "Preserve all placeholders exactly as they appear. "
+                        "DO NOT translate any text matching these patterns: MATCHINGTERM_{}, HTMLENTITY_{}, HTMLTAG_{}."
                     )
                 },
                 {"role": "user", "content": prompt}
@@ -204,7 +206,8 @@ class OpenAITranslationClient:
                     "content": (
                         f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
                         "Return exactly one translated line. "
-                        "Preserve all placeholders exactly as they appear."
+                        "Preserve all placeholders exactly as they appear. "
+                        "DO NOT translate any text matching these patterns: MATCHINGTERM_{}, HTMLENTITY_{}, HTMLTAG_{}."
                     )
                 },
                 {"role": "user", "content": prompt}
@@ -242,6 +245,8 @@ class OpenAITranslationClient:
 
 IMPORTANT INSTRUCTIONS:
 - Preserve all placeholders exactly as they appear
-- Only translate the actual text content
+- DO NOT translate any text matching these patterns: MATCHINGTERM_{{}}, HTMLENTITY_{{}}, HTMLTAG_{{}}
+- Only translate the actual text content, not placeholder patterns
+- Keep all placeholder patterns completely unchanged
 
 Return the translation as a JSON object with "lines_translated" array containing exactly {len(lines)} strings."""
