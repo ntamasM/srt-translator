@@ -2,6 +2,16 @@
 
 A production-ready Python CLI tool that translates SubRip (.srt) subtitle files using OpenAI's API while preserving exact structure, timing, and formatting.
 
+<div align="center">
+
+[![Buy Me A Coffee](https://img.shields.io/badge/☕-Support%20Me-orange?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/ntamadakis.m)
+[![GitHub stars](https://img.shields.io/github/stars/ntamasM/srt-translator?style=for-the-badge&logo=github)](https://github.com/ntamasM/srt-translator/stargazers)
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+</div>
+
+---
+
 ## 📋 Table of Contents
 
 - [🚀 Key Features](#-key-features)
@@ -18,6 +28,7 @@ A production-ready Python CLI tool that translates SubRip (.srt) subtitle files 
 - [🛠️ Error Handling](#️-error-handling)
 - [📋 Requirements](#-requirements)
 - [🧪 Development](#-development)
+- [☕ Support the Project](#-support-the-project)
 - [📄 License](#-license)
 
 ## 🚀 Key Features
@@ -329,6 +340,26 @@ src/srt_chatgpt_translator/
 ├── credits.py          # Credits detection & replacement
 └── word_removal.py     # Word removal functionality
 ```
+
+## ☕ Support the Project
+
+If this tool has been helpful for your subtitle translation projects, consider supporting its development!
+
+<div align="center">
+
+[![Buy Me A Coffee](https://img.shields.io/badge/☕-Buy%20Me%20A%20Coffee-orange?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/ntamadakis.m)
+
+</div>
+
+### 🌟 Other Ways to Support
+
+- ⭐ **Star this repository** on GitHub
+- 🐦 **Share it** on social media - mention [@ntamasM](https://github.com/ntamasM)
+- 🐛 **Report bugs** or suggest features
+- 📖 **Contribute** to the documentation
+- 💬 **Spread the word** to other subtitle translators
+
+Every bit of support helps maintain and improve this tool! 🚀
 
 ## 📄 License
 
