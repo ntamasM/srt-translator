@@ -248,14 +248,10 @@ class SRTTranslator:
             protected_lines.append(protected_line)
             all_replacements.update(replacements)
         
-        # Translate the protected lines
-        try:
-            translated_lines = self.client.translate_lines(
-                protected_lines, src_lang, tgt_lang
-            )
-        except Exception as e:
-            print(f"Translation failed for subtitle {subtitle.index}: {e}")
-            translated_lines = protected_lines  # Keep original on failure
+        # Translate the protected lines (let errors propagate to caller)
+        translated_lines = self.client.translate_lines(
+            protected_lines, src_lang, tgt_lang
+        )
         
         # Restore protected content
         restored_lines = []

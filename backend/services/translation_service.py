@@ -115,6 +115,15 @@ async def run_translation(
     # API key from request settings; fall back to env
     api_key = config.get("api_key") or os.environ.get("OPENAI_API_KEY", "")
 
+    if not api_key:
+        job["status"] = "error"
+        if progress_callback:
+            await progress_callback({
+                "type": "error",
+                "message": "No API key provided. Please set your API key in Settings → General.",
+            })
+        return
+
     translator = SRTTranslator(
         api_key=api_key,
         model=config.get("model", "gpt-4o-mini"),
@@ -217,6 +226,7 @@ async def _translate_file_parallel(
 
     # Pre-allocate result list (preserve ordering)
     translated: list[Any] = [None] * total
+    error_count = {"value": 0}
 
     async def _translate_one(idx: int, sub):
         # Check cancellation before starting
@@ -228,9 +238,26 @@ async def _translate_file_parallel(
             if cancel_event.is_set():
                 raise CancelledError()
 
-            result = await asyncio.to_thread(
-                translator.translate_subtitle, sub, src_lang, tgt_lang
-            )
+            try:
+                result = await asyncio.to_thread(
+                    translator.translate_subtitle, sub, src_lang, tgt_lang
+                )
+            except Exception as e:
+                # Keep the original subtitle as fallback but report the error
+                import srt as _srt
+                result = _srt.Subtitle(
+                    index=sub.index, start=sub.start, end=sub.end, content=sub.content
+                )
+                async with progress_lock:
+                    error_count["value"] += 1
+                if progress_callback:
+                    await progress_callback({
+                        "type": "subtitle_error",
+                        "file": filename,
+                        "subtitle": sub.index,
+                        "message": str(e),
+                    })
+
             translated[idx] = result
 
             # Update progress
@@ -262,6 +289,14 @@ async def _translate_file_parallel(
         # Wait for tasks to finish cancelling
         await asyncio.gather(*tasks, return_exceptions=True)
         raise
+
+    # Report if there were subtitle-level errors
+    if error_count["value"] > 0 and progress_callback:
+        await progress_callback({
+            "type": "warning",
+            "file": filename,
+            "message": f"{error_count['value']}/{total} subtitles failed to translate (kept original text)",
+        })
 
     # Finalize: add credits and write output
     await asyncio.to_thread(
