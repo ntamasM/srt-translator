@@ -9,12 +9,27 @@ export function formatFileSize(bytes: number): string {
 
 /**
  * Calculate overall progress percentage from per-file progress.
+ *
+ * Files whose cue count isn't known yet (total === 0) are estimated
+ * using the average cue count of files that have been parsed, so
+ * pending files properly count toward the denominator.
  */
 export function overallProgress(
   files: { current: number; total: number }[],
 ): number {
-  const totalCues = files.reduce((s, f) => s + f.total, 0);
-  if (totalCues === 0) return 0;
-  const doneCues = files.reduce((s, f) => s + f.current, 0);
-  return Math.round((doneCues / totalCues) * 100);
+  if (files.length === 0) return 0;
+
+  const known = files.filter((f) => f.total > 0);
+  const unknown = files.filter((f) => f.total === 0);
+
+  if (known.length === 0) return 0;
+
+  const knownTotal = known.reduce((s, f) => s + f.total, 0);
+  const knownDone = known.reduce((s, f) => s + f.current, 0);
+
+  // Estimate unknown files as having the average cue count of known files
+  const avgCues = knownTotal / known.length;
+  const estimatedTotal = knownTotal + unknown.length * avgCues;
+
+  return Math.round((knownDone / estimatedTotal) * 100);
 }
