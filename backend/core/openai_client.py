@@ -21,7 +21,7 @@ class OpenAITranslationClient:
             temperature: Sampling temperature
             top_p: Top-p sampling parameter
         """
-        self.client = OpenAI(api_key=api_key)
+        self.client = OpenAI(api_key=api_key, timeout=60.0)
         self.model = model
         self.temperature = temperature
         self.top_p = top_p

@@ -31,5 +31,8 @@ export function overallProgress(
   const avgCues = knownTotal / known.length;
   const estimatedTotal = knownTotal + unknown.length * avgCues;
 
-  return Math.round((knownDone / estimatedTotal) * 100);
+  const pct = (knownDone / estimatedTotal) * 100;
+  // Only show 100% when every known cue is truly done
+  if (pct >= 100) return 100;
+  return Math.min(Math.floor(pct), 99);
 }

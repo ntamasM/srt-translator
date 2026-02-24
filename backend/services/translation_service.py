@@ -239,9 +239,27 @@ async def _translate_file_parallel(
                 raise CancelledError()
 
             try:
-                result = await asyncio.to_thread(
-                    translator.translate_subtitle, sub, src_lang, tgt_lang
+                result = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        translator.translate_subtitle, sub, src_lang, tgt_lang
+                    ),
+                    timeout=120,
                 )
+            except asyncio.TimeoutError as e:
+                # Treat timeout same as other errors — keep original text
+                import srt as _srt
+                result = _srt.Subtitle(
+                    index=sub.index, start=sub.start, end=sub.end, content=sub.content
+                )
+                async with progress_lock:
+                    error_count["value"] += 1
+                if progress_callback:
+                    await progress_callback({
+                        "type": "subtitle_error",
+                        "file": filename,
+                        "subtitle": sub.index,
+                        "message": f"Subtitle {sub.index} timed out, kept original text",
+                    })
             except Exception as e:
                 # Keep the original subtitle as fallback but report the error
                 import srt as _srt

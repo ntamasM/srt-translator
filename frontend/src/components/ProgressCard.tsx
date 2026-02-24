@@ -15,7 +15,9 @@ export default function ProgressCard({
 }: ProgressCardProps) {
   const pct =
     progress.total > 0
-      ? Math.round((progress.current / progress.total) * 100)
+      ? progress.current >= progress.total
+        ? 100
+        : Math.min(Math.floor((progress.current / progress.total) * 100), 99)
       : 0;
 
   return (
