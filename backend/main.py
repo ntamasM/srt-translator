@@ -92,6 +92,7 @@ def health():
 _frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 if _frontend_dist.exists():
     from fastapi.responses import FileResponse
+    from starlette.staticfiles import StaticFiles
 
     app.mount("/assets", StaticFiles(directory=str(_frontend_dist / "assets")), name="assets")
 
