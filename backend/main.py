@@ -1,10 +1,13 @@
 """FastAPI application entry point."""
 
+import uuid
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 
 from routers import files, translation
 from config import ensure_dirs
@@ -22,6 +25,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ---------------------------------------------------------------------------
+# Session middleware — assigns each browser a persistent UUID via cookie.
+# This is used to isolate file uploads / downloads per user.
+# ---------------------------------------------------------------------------
+class SessionCookieMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        session_id = request.cookies.get("session_id")
+        if not session_id:
+            session_id = uuid.uuid4().hex
+        request.state.session_id = session_id
+        response = await call_next(request)
+        # Always set / refresh the cookie (30-day expiry)
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            samesite="lax",
+            max_age=30 * 24 * 60 * 60,
+        )
+        return response
+
+
+app.add_middleware(SessionCookieMiddleware)
 
 # Mount routers
 app.include_router(files.router)

@@ -3,7 +3,7 @@
 import asyncio
 import json
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from schemas.translation import TranslationRequest, TranslationResult
 from services import translation_service
 
@@ -11,15 +11,17 @@ router = APIRouter(tags=["translation"])
 
 
 @router.post("/api/translate", response_model=TranslationResult)
-def start_translation(req: TranslationRequest):
+def start_translation(req: TranslationRequest, request: Request):
     """Create a translation job and return a job_id.
 
     The actual work runs when a client connects to the WebSocket.
     """
+    session_id = getattr(request.state, "session_id", "")
     matching = [{"source": w.source, "target": w.target} for w in req.matching_words]
     settings_dict = req.settings.model_dump()
     job_id = translation_service.create_job(
         req.files,
+        session_id=session_id,
         settings=settings_dict,
         matching_words=matching,
         removal_words=req.removal_words,

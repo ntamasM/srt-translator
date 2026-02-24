@@ -27,6 +27,7 @@ class CancelledError(Exception):
 
 def create_job(
     files: list[str],
+    session_id: str = "",
     settings: dict[str, Any] | None = None,
     matching_words: list[dict[str, str]] | None = None,
     removal_words: list[str] | None = None,
@@ -36,6 +37,7 @@ def create_job(
     _jobs[job_id] = {
         "status": "pending",
         "files": files,
+        "session_id": session_id,
         "settings": settings or {},
         "matching_words": matching_words or [],
         "removal_words": removal_words or [],
@@ -99,6 +101,12 @@ async def run_translation(
     cancel_event: asyncio.Event = job["cancel_event"]
     job["status"] = "running"
     config = job["settings"]
+    session_id = job.get("session_id", "")
+
+    # Session-scoped directories
+    session_subs = SUBTITLES_DIR / session_id if session_id else SUBTITLES_DIR
+    session_trans = TRANSLATED_DIR / session_id if session_id else TRANSLATED_DIR
+    session_trans.mkdir(parents=True, exist_ok=True)
 
     # Write matching/removal words from client to temp files
     matching_file = _write_temp_matching(job["matching_words"])
@@ -124,14 +132,12 @@ async def run_translation(
     add_credits = config.get("add_credits", True)
     append_credits_at_end = config.get("append_credits_at_end", False)
 
-    TRANSLATED_DIR.mkdir(parents=True, exist_ok=True)
-
     for filename in job["files"]:
         if cancel_event.is_set():
             break
 
-        input_path = SUBTITLES_DIR / filename
-        output_path = TRANSLATED_DIR / filename
+        input_path = session_subs / filename
+        output_path = session_trans / filename
 
         if not input_path.exists():
             error_msg = f"File not found: {filename}"
