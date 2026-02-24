@@ -4,8 +4,7 @@ import Button from "../components/Button";
 import FileDropZone from "../components/FileDropZone";
 import ProgressBar from "../components/ProgressBar";
 import ProgressCard from "../components/ProgressCard";
-import { useFileUpload } from "../hooks/useFileUpload";
-import { useTranslation } from "../hooks/useTranslation";
+import { useTranslationContext } from "../contexts/TranslationContext";
 import { useSettings } from "../hooks/useSettings";
 import { useToast } from "../components/Toast";
 import { formatFileSize, overallProgress } from "../utils/helpers";
@@ -22,8 +21,6 @@ export default function HomePage() {
     addFiles,
     removeFile,
     refreshFiles,
-  } = useFileUpload();
-  const {
     status,
     fileProgress,
     completedFiles,
@@ -31,7 +28,7 @@ export default function HomePage() {
     startTranslation,
     cancelTranslation,
     reset,
-  } = useTranslation();
+  } = useTranslationContext();
   const { addToast } = useToast();
 
   useEffect(() => {
