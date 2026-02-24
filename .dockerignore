@@ -1,0 +1,12 @@
+node_modules
+__pycache__
+*.pyc
+.git
+.claude
+dummy
+frontend/dist
+frontend/node_modules
+data/
+*.egg-info
+.venv
+.env

@@ -81,8 +81,20 @@ Thumbs.db
 translated/
 output/
 
-# Data files
+# Data files (user-specific content)
 data/
 data_*.zip
 data_*.tar.gz
 data_*.7z
+
+# Dummy files
+dummy/
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/node_modules/
+package-lock.json
+
+# Backend
+backend/__pycache__/
+backend/**/__pycache__/
