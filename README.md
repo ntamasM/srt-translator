@@ -161,20 +161,20 @@ The app serves both the API and the built frontend on port **8000**.
 
 All settings are configured through the web UI and stored in your browser's IndexedDB. Nothing is stored on the server.
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| AI Platform | OpenAI | AI provider (OpenAI, Gemini, Claude) |
-| API Key | — | Your API key (stored only in your browser) |
-| Model | gpt-4o-mini | Model to use for translation |
-| Temperature | 0.2 | Sampling temperature (0–2) |
-| Top P | 0.1 | Top-p sampling parameter (0–1) |
-| Source Language | en | Source language code |
-| Target Language | el | Target language code |
-| Translator Name | Ntamas | Name for translator credits |
-| Case-Insensitive Matching | false | Match words regardless of case |
-| Replace Credits | true | Replace existing translator credits |
-| Add Credits | true | Add translator credits to output |
-| Append Credits at End | false | Force credits at end of file |
+| Setting                   | Default     | Description                                |
+| ------------------------- | ----------- | ------------------------------------------ |
+| AI Platform               | OpenAI      | AI provider (OpenAI, Gemini, Claude)       |
+| API Key                   | —           | Your API key (stored only in your browser) |
+| Model                     | gpt-4o-mini | Model to use for translation               |
+| Temperature               | 0.2         | Sampling temperature (0–2)                 |
+| Top P                     | 0.1         | Top-p sampling parameter (0–1)             |
+| Source Language           | en          | Source language code                       |
+| Target Language           | el          | Target language code                       |
+| Translator Name           | Ntamas      | Name for translator credits                |
+| Case-Insensitive Matching | false       | Match words regardless of case             |
+| Replace Credits           | true        | Replace existing translator credits        |
+| Add Credits               | true        | Add translator credits to output           |
+| Append Credits at End     | false       | Force credits at end of file               |
 
 ### Matching Words
 
@@ -248,6 +248,7 @@ To deploy on Coolify:
 If using Cloudflare proxy, set SSL mode to **Full**.
 
 The Dockerfile uses a multi-stage build:
+
 - **Stage 1**: `node:22-alpine` builds the frontend (`npm ci && npm run build`)
 - **Stage 2**: `python:3.13-slim` runs the backend + serves the built frontend
 - Built-in health check at `/api/health`

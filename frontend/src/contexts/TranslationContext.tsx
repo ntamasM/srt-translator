@@ -30,7 +30,9 @@ interface TranslationContextValue {
   isDragging: boolean;
   setIsDragging: (v: boolean) => void;
   isUploading: boolean;
-  addFiles: (newFiles: File[]) => Promise<{ files: FileInfo[]; message: string }>;
+  addFiles: (
+    newFiles: File[],
+  ) => Promise<{ files: FileInfo[]; message: string }>;
   removeFile: (filename: string) => Promise<void>;
   refreshFiles: () => Promise<void>;
 
@@ -55,7 +57,11 @@ const TranslationContext = createContext<TranslationContextValue | null>(null);
 /*  Provider                                                           */
 /* ------------------------------------------------------------------ */
 
-export function TranslationProvider({ children }: { children: React.ReactNode }) {
+export function TranslationProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   // ── File state ──────────────────────────────────────────────────
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -88,7 +94,9 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
   // ── Translation state ───────────────────────────────────────────
   const [status, setStatus] = useState<TranslationStatus>("idle");
-  const [fileProgress, setFileProgress] = useState<Record<string, FileProgress>>({});
+  const [fileProgress, setFileProgress] = useState<
+    Record<string, FileProgress>
+  >({});
   const [completedFiles, setCompletedFiles] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -250,7 +258,9 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 export function useTranslationContext() {
   const ctx = useContext(TranslationContext);
   if (!ctx) {
-    throw new Error("useTranslationContext must be used within TranslationProvider");
+    throw new Error(
+      "useTranslationContext must be used within TranslationProvider",
+    );
   }
   return ctx;
 }
