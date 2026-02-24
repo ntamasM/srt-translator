@@ -7,6 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from routers import files, translation
+from config import ensure_dirs
+
+# Ensure data directories exist at startup
+ensure_dirs()
 
 app = FastAPI(title="SRT Translator API", version="1.0.0")
 
