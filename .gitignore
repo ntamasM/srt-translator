@@ -93,7 +93,6 @@ dummy/
 node_modules/
 frontend/dist/
 frontend/node_modules/
-package-lock.json
 
 # Backend
 backend/__pycache__/
