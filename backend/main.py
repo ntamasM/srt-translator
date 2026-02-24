@@ -27,12 +27,13 @@ app.add_middleware(
 app.include_router(files.router)
 app.include_router(translation.router)
 
-# Serve frontend build (production) if available
-_frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
-if _frontend_dist.exists():
-    app.mount("/", StaticFiles(directory=str(_frontend_dist), html=True), name="frontend")
-
 
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+# Serve frontend build (production) if available — MUST be last (catch-all)
+_frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+if _frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=str(_frontend_dist), html=True), name="frontend")
