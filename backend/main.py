@@ -1,6 +1,9 @@
 """FastAPI application entry point."""
 
+import asyncio
+import logging
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -11,11 +14,36 @@ from starlette.requests import Request
 
 from routers import files, translation
 from config import ensure_dirs
+from services.file_service import cleanup_old_files
+
+log = logging.getLogger(__name__)
 
 # Ensure data directories exist at startup
 ensure_dirs()
 
-app = FastAPI(title="SRT Translator API", version="1.0.0")
+CLEANUP_INTERVAL_HOURS = 1
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Run cleanup on startup and periodically in the background."""
+    # Initial cleanup
+    cleanup_old_files()
+
+    async def _periodic_cleanup():
+        while True:
+            await asyncio.sleep(CLEANUP_INTERVAL_HOURS * 3600)
+            try:
+                cleanup_old_files()
+            except Exception:
+                log.exception("Periodic file cleanup failed")
+
+    task = asyncio.create_task(_periodic_cleanup())
+    yield
+    task.cancel()
+
+
+app = FastAPI(title="SRT Translator API", version="1.0.0", lifespan=lifespan)
 
 # CORS — allow all origins (API keys are stored client-side, no server secrets)
 app.add_middleware(

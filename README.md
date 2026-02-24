@@ -25,6 +25,7 @@ A full-stack web application for translating SubRip (.srt) subtitle files using 
   - [🗑️ Word Removal](#️-word-removal)
   - [📝 Smart Credits Management](#-smart-credits-management)
   - [🔄 Processing Order](#-processing-order)
+  - [🧹 Automatic File Cleanup](#-automatic-file-cleanup)
 - [🌐 Deployment (Coolify)](#-deployment-coolify)
 - [☕ Support the Project](#-support-the-project)
 - [📄 License](#-license)
@@ -42,6 +43,8 @@ A full-stack web application for translating SubRip (.srt) subtitle files using 
 - **Word Removal**: Remove unwanted words/patterns from translations
 - **Smart Credits Management**: Automatically detects, replaces, and inserts translator credits at optimal locations
 - **Bulk Edit/Delete**: Batch operations for matching words and removal words management
+- **Old Files Browser**: View previously uploaded and translated files with download/delete actions
+- **Automatic Cleanup**: Files older than 7 days are automatically deleted; each file shows days remaining
 
 ## 🏗️ Architecture
 
@@ -51,7 +54,7 @@ A full-stack web application for translating SubRip (.srt) subtitle files using 
 │                                                     │
 │  IndexedDB ─── settings, matching words,            │
 │                 removal words (per-browser)          │
-│  Pages ──────── Home (translate), Settings           │
+│  Pages ──────── Home (translate), Old Files, Settings │
 │  Context ────── TranslationContext (global state)    │
 └──────────────────────┬──────────────────────────────┘
                        │  /api/*  REST + /ws/* WebSocket
@@ -98,6 +101,7 @@ srt-translator/
 │       ├── hooks/              # useSettings, useFileUpload
 │       ├── pages/
 │       │   ├── HomePage.tsx    # Main translate page
+│       │   ├── OldFilesPage.tsx # Browse uploaded/translated files
 │       │   └── settings/       # General, MatchingWords, RemoveWords
 │       ├── types/              # TypeScript type definitions
 │       └── utils/
@@ -234,6 +238,16 @@ Translation progress is managed by a global React Context (`TranslationContext`)
 - You can navigate to Settings while a translation is running
 - Progress bars, completed files, and download links persist when you return
 - The WebSocket connection stays alive across page changes
+
+### 🧹 Automatic File Cleanup
+
+To prevent unbounded disk usage, the server automatically cleans up old files:
+
+- Files older than **7 days** (based on modification time) are deleted
+- Cleanup runs on server startup and every hour thereafter
+- Applies to both uploaded and translated files across all sessions
+- Empty session directories are removed after cleanup
+- The **Old Files** page shows a countdown badge on each file indicating days remaining before deletion
 
 ## 🌐 Deployment (Coolify)
 

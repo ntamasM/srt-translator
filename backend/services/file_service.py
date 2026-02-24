@@ -1,11 +1,17 @@
 """File service — upload, list, download, delete SRT files (session-scoped)."""
 
+import logging
 import re
-from datetime import datetime, timezone
+import shutil
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import BinaryIO
 
 from config import DATA_DIR
+
+log = logging.getLogger(__name__)
+
+MAX_AGE_DAYS = 7
 
 
 SUBTITLES_DIR = DATA_DIR / "subtitles"
@@ -76,3 +82,39 @@ def list_translated_files(session_id: str) -> list[dict]:
     d = _session_translated(session_id)
     files = sorted(d.glob("*.srt"), key=lambda p: p.name)
     return [_file_info(f) for f in files]
+
+
+# ---------------------------------------------------------------------------
+# Cleanup — delete files older than MAX_AGE_DAYS
+# ---------------------------------------------------------------------------
+
+def cleanup_old_files() -> int:
+    """Delete files older than MAX_AGE_DAYS across all sessions.
+
+    Also removes empty session directories. Returns the number of files deleted.
+    """
+    cutoff = datetime.now(tz=timezone.utc) - timedelta(days=MAX_AGE_DAYS)
+    deleted = 0
+
+    for base_dir in (SUBTITLES_DIR, TRANSLATED_DIR):
+        if not base_dir.exists():
+            continue
+        for session_dir in base_dir.iterdir():
+            if not session_dir.is_dir():
+                continue
+            for f in session_dir.iterdir():
+                if not f.is_file():
+                    continue
+                mtime = datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc)
+                if mtime < cutoff:
+                    f.unlink()
+                    deleted += 1
+            # Remove session dir if empty
+            try:
+                session_dir.rmdir()
+            except OSError:
+                pass  # directory not empty, that's fine
+
+    if deleted:
+        log.info("Cleanup: deleted %d file(s) older than %d days", deleted, MAX_AGE_DAYS)
+    return deleted

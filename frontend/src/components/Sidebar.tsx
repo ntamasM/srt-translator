@@ -1,9 +1,17 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Home, Settings, BookOpen, Trash2, Clapperboard } from "lucide-react";
+import {
+  Home,
+  Settings,
+  BookOpen,
+  Trash2,
+  Clapperboard,
+  FolderOpen,
+} from "lucide-react";
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
+  { to: "/files", label: "Old Files", icon: FolderOpen },
   { to: "/settings/general", label: "General", icon: Settings },
   { to: "/settings/matching", label: "Matching Words", icon: BookOpen },
   { to: "/settings/removal", label: "Remove Words", icon: Trash2 },
