@@ -1,6 +1,6 @@
-# 🎬 SRT ChatGPT Translator
+# 🎬 SRT Translator
 
-A production-ready Python CLI tool that translates SubRip (.srt) subtitle files using OpenAI's API while preserving exact structure, timing, and formatting.
+A full-stack web application for translating SubRip (.srt) subtitle files using OpenAI's API. Features a React frontend with per-user file isolation, real-time translation progress via WebSocket, and all settings stored client-side in IndexedDB.
 
 <div align="center">
 
@@ -15,335 +15,246 @@ A production-ready Python CLI tool that translates SubRip (.srt) subtitle files 
 ## 📋 Table of Contents
 
 - [🚀 Key Features](#-key-features)
+- [🏗️ Architecture](#️-architecture)
 - [⚙️ Installation & Setup](#️-installation--setup)
-- [🚀 Quick Start Scripts](#-quick-start-scripts)
-- [💻 Command Line Usage](#-command-line-usage)
-- [🔧 Environment Variables](#-environment-variables)
+  - [Development](#development)
+  - [Production (Docker)](#production-docker)
+- [🔧 Configuration](#-configuration)
 - [⚡ How It Works](#-how-it-works)
   - [🔄 Word Replacement System](#-word-replacement-system)
   - [🗑️ Word Removal](#️-word-removal)
   - [📝 Smart Credits Management](#-smart-credits-management)
   - [🔄 Processing Order](#-processing-order)
-- [📝 Complete Example](#-complete-example)
-- [🛠️ Error Handling](#️-error-handling)
-- [📋 Requirements](#-requirements)
-- [🧪 Development](#-development)
+- [🌐 Deployment (Coolify)](#-deployment-coolify)
 - [☕ Support the Project](#-support-the-project)
 - [📄 License](#-license)
 
 ## 🚀 Key Features
 
+- **Web UI**: Modern React interface with drag-and-drop file upload, real-time progress bars, and settings management
+- **Per-User Isolation**: Each browser gets a unique session — uploaded files and translations are private via session cookies
+- **Client-Side Settings**: All settings (API key, model, language, matching/removal words) stored in IndexedDB — nothing sensitive on the server
+- **Real-Time Progress**: WebSocket-based live translation progress that persists across page navigation
+- **Parallel Translation**: Subtitles are translated concurrently (configurable concurrency) for faster results
 - **Structure Preservation**: Maintains exact SRT structure including cue indices, timestamps, and line counts
-- **HTML Tag Protection**: Preserves inline HTML tags (`<i>`, `<b>`, `<font>`, etc.) and entities (`&amp;`, `&lt;`, etc.)
-- **Word Replacement System**: Replaces specific terms in translations using `source --> target` format matching files
-- **Smart Credits Management**: Automatically detects, replaces, and intelligently inserts translator credits
-- **Word Removal**: Completely removes unwanted words or patterns from translations
-- **Structured Output**: Uses OpenAI's Responses API with JSON schema for reliable translation
-- **Batch Processing**: Process entire directories of SRT files
-- **Robust Error Handling**: Multiple retry strategies with graceful fallbacks
+- **HTML Tag Protection**: Preserves inline HTML tags (`<i>`, `<b>`, `<font>`, etc.) and entities
+- **Word Replacement System**: Post-translation term replacement using `source --> target` matching files
+- **Word Removal**: Remove unwanted words/patterns from translations
+- **Smart Credits Management**: Automatically detects, replaces, and inserts translator credits at optimal locations
+- **Bulk Edit/Delete**: Batch operations for matching words and removal words management
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Frontend (React 19 + Vite + Tailwind CSS 4)        │
+│                                                     │
+│  IndexedDB ─── settings, matching words,            │
+│                 removal words (per-browser)          │
+│  Pages ──────── Home (translate), Settings           │
+│  Context ────── TranslationContext (global state)    │
+└──────────────────────┬──────────────────────────────┘
+                       │  /api/*  REST + /ws/* WebSocket
+┌──────────────────────▼──────────────────────────────┐
+│  Backend (FastAPI + Uvicorn)                         │
+│                                                     │
+│  SessionCookieMiddleware ─── UUID cookie per browser │
+│  File Storage ───────────── data/subtitles/{sid}/    │
+│                              data/translated/{sid}/  │
+│  Translation ────────────── OpenAI API (parallel)    │
+│  WebSocket ──────────────── Real-time progress       │
+└─────────────────────────────────────────────────────┘
+```
+
+### Project Structure
+
+```
+srt-translator/
+├── backend/
+│   ├── main.py                 # FastAPI app + session middleware
+│   ├── config.py               # Directory constants
+│   ├── core/
+│   │   ├── translate.py        # SRTTranslator engine
+│   │   ├── openai_client.py    # OpenAI API wrapper
+│   │   ├── placeholders.py     # HTML/word protection & replacement
+│   │   ├── credits.py          # Credits detection & replacement
+│   │   └── word_removal.py     # Word removal logic
+│   ├── routers/
+│   │   ├── files.py            # Upload, list, download, delete
+│   │   └── translation.py     # Translate + WebSocket progress
+│   ├── schemas/
+│   │   ├── files.py            # FileInfo, UploadResponse models
+│   │   └── translation.py     # TranslationRequest, Settings models
+│   └── services/
+│       ├── file_service.py     # Session-scoped file operations
+│       └── translation_service.py  # Job management + parallel translation
+├── frontend/
+│   └── src/
+│       ├── App.tsx             # Routes + providers
+│       ├── api/                # REST client, filesApi, translationApi
+│       ├── components/         # Button, FileDropZone, ProgressBar, etc.
+│       ├── contexts/
+│       │   └── TranslationContext.tsx  # Global translation state
+│       ├── hooks/              # useSettings, useFileUpload
+│       ├── pages/
+│       │   ├── HomePage.tsx    # Main translate page
+│       │   └── settings/       # General, MatchingWords, RemoveWords
+│       ├── types/              # TypeScript type definitions
+│       └── utils/
+│           ├── constants.ts    # API URLs, AI platform options
+│           ├── db.ts           # IndexedDB operations
+│           └── helpers.ts      # Formatting utilities
+├── Dockerfile                  # Multi-stage build (Node + Python)
+├── .dockerignore
+└── data/                       # Runtime file storage (ephemeral in Docker)
+```
 
 ## ⚙️ Installation & Setup
 
-### 1️⃣ Clone and Install
+### Development
+
+#### Prerequisites
+
+- Python 3.13+
+- Node.js 22+
+- npm
+
+#### 1. Clone the repository
 
 ```bash
 git clone https://github.com/ntamasM/srt-translator.git
 cd srt-translator
-pip install -e .
 ```
 
-### 2️⃣ Set up your OpenAI API key
+#### 2. Start the backend
 
 ```bash
-cp .env.example .env
-# Edit .env and set your OPENAI_API_KEY
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
 ```
 
-### 3️⃣ Create the recommended data structure
-
-Create the following folder structure in the root directory:
-
-```
-data/
-├── subtitles/          # Source SRT files to translate
-├── translated/         # Output directory for translated files
-├── matching/          # Word replacement files (source --> target)
-└── remove/            # Word removal files
-```
-
-## 🚀 Quick Start Scripts
-
-For convenience, the repository includes ready-to-use scripts for batch translation:
-
-### 🪟 Windows Users (`run_translation.ps1`)
-
-```powershell
-.\run_translation.ps1
-```
-
-### 🐧 Linux/Mac Users (`run_translation.sh`)
+#### 3. Start the frontend (separate terminal)
 
 ```bash
-./run_translation.sh
+cd frontend
+npm install
+npm run dev
 ```
 
-Both scripts automatically:
+The frontend dev server proxies `/api` and `/ws` requests to the backend at `localhost:8000`.
 
-- Translate ALL SRT files in `data\subtitles\` directory
-- Output translated files to `data\translated\` directory
-- Use English to Greek translation with matching terms
-- Apply case-insensitive matching from `data\matching\animeMatchingToEl.txt`
+Open **http://localhost:5173** in your browser.
 
-### ⚠️ Before Running Scripts
+### Production (Docker)
 
-1. **🔑 Set up your API key**: Make sure your OpenAI API key is configured in the `.env` file
-2. **📁 Prepare your files**: Place your SRT files in the `data/subtitles/` directory
-3. **🔧 Customize if needed**: Edit the script files to change source/target languages, matching files, or other parameters
-
-## 💻 Command Line Usage
-
-### 📝 Basic Commands
-
-#### 📄 Single File Translation
+Build and run with Docker:
 
 ```bash
-srt-translate input.srt output.srt
+docker build -t srt-translator .
+docker run -p 8000:8000 srt-translator
 ```
 
-#### 📦 Batch Processing
+The app serves both the API and the built frontend on port **8000**.
 
-```bash
-srt-translate --input-dir ./subtitles --output-dir ./translated
-```
+## 🔧 Configuration
 
-#### 🔄 With Word Replacement
+All settings are configured through the web UI and stored in your browser's IndexedDB. Nothing is stored on the server.
 
-```bash
-srt-translate input.srt output.srt --matching anime_terms.txt
-```
+| Setting | Default | Description |
+|---------|---------|-------------|
+| AI Platform | OpenAI | AI provider (OpenAI, Gemini, Claude) |
+| API Key | — | Your API key (stored only in your browser) |
+| Model | gpt-4o-mini | Model to use for translation |
+| Temperature | 0.2 | Sampling temperature (0–2) |
+| Top P | 0.1 | Top-p sampling parameter (0–1) |
+| Source Language | en | Source language code |
+| Target Language | el | Target language code |
+| Translator Name | Ntamas | Name for translator credits |
+| Case-Insensitive Matching | false | Match words regardless of case |
+| Replace Credits | true | Replace existing translator credits |
+| Add Credits | true | Add translator credits to output |
+| Append Credits at End | false | Force credits at end of file |
 
-#### 🎯 Complete Example
+### Matching Words
 
-```bash
-srt-translate input.srt output.srt \
-  --src en --tgt el \
-  --matching anime_terms.txt --matching-ci \
-  --removal-file profanity.txt \
-  --translator-name "Your Name"
-```
+Manage word replacement pairs via **Settings → Matching Words**. Supports bulk edit and bulk delete. Format: `source → target`.
 
-### ⚙️ Command Line Options
+These are sent with each translation request and applied post-translation.
 
-#### 📋 Positional Arguments
+### Removal Words
 
-| Argument      | Required | Description                                        |
-| ------------- | -------- | -------------------------------------------------- |
-| `input_file`  | Yes\*    | Input SRT file path (when not using `--input-dir`) |
-| `output_file` | Yes\*    | Output SRT file path (when using `input_file`)     |
-
-\*Either use `input_file`/`output_file` for single file mode OR `--input-dir`/`--output-dir` for batch mode.
-
-#### 🛠️ Optional Arguments
-
-| Option                        | Default       | Type   | Description                                   |
-| ----------------------------- | ------------- | ------ | --------------------------------------------- |
-| `--input-dir`                 | None          | String | Input directory containing SRT files (batch)  |
-| `--output-dir`                | None          | String | Output directory for translated files (batch) |
-| `--src`                       | `en`          | String | Source language code                          |
-| `--tgt`                       | `el`          | String | Target language code                          |
-| `--model`                     | `gpt-4o-mini` | String | OpenAI model to use                           |
-| `--temperature`               | `0.2`         | Float  | Sampling temperature (0-2)                    |
-| `--top-p`                     | `0.1`         | Float  | Top-p sampling parameter (0-1)                |
-| `--matching`                  | None          | String | Path to word replacement file                 |
-| `--matching-ci`               | False         | Flag   | Case-insensitive word replacement             |
-| `--removal-file`              | None          | String | Path to word removal file                     |
-| `--translator-name`           | `Ntamas`      | String | Name of translator to use in credits          |
-| `--replace-old-credits`       | True          | Flag   | Replace existing translator credits           |
-| `--add-new-credits`           | True          | Flag   | Intelligently add translator credits          |
-| `--append-credits-at-the-end` | False         | Flag   | Force credits at end instead of finding gaps  |
-
-## 🔧 Environment Variables
-
-Set your OpenAI API key in a `.env` file or environment:
-
-```bash
-OPENAI_API_KEY=your_api_key_here
-```
+Manage words to remove via **Settings → Remove Words**. Supports bulk edit and bulk delete.
 
 ## ⚡ How It Works
 
 ### 🔄 Word Replacement System
 
-The matching system supports **post-translation word replacement** using a simple `source --> target` format:
+The matching system applies **post-translation word replacement**:
 
-#### 🔄 Process Flow
-
-1. **Translation First**: AI translates the subtitle normally
-2. **🔄 Word Replacement**: After translation, specific terms are replaced using your matching file
-3. **🎯 Intelligent Matching**: Uses word boundaries to avoid partial replacements
-
-#### 📄 Matching File Format
-
-Create a text file with `source --> target` format:
-
-```
-# Comments start with #
-# English --> Greek translations for anime terms
-
-Demon Slayer Corps --> Σώμα Εξολοθρευτών Δαιμόνων
-Water Breathing --> Αναπνοή του Νερού
-Thunder Breathing --> Αναπνοή της Βροντής
-Nichirin Blade --> Λεπίδα Νιτσιρίν
-Total Concentration Breathing --> Αναπνοή Ολικής Συγκέντρωσης
-Final Selection --> Τελική Δοκιμασία
-
-# Character names (keep same)
-Tanjiro --> Tanjiro
-Nezuko --> Nezuko
-```
-
-#### 💡 Example Process
-
-**Original**: "The Demon Slayer Corps uses Water Breathing techniques."
-
-**Step 1 - AI Translation**: "Το Σώμα Εξολοθρευτών Δαιμόνων χρησιμοποιεί τεχνικές Water Breathing."
-
-**Step 2 - Word Replacement**: "Το Σώμα Εξολοθρευτών Δαιμόνων χρησιμοποιεί τεχνικές Αναπνοή του Νερού."
+1. **Translation**: AI translates the subtitle
+2. **Replacement**: Specified terms are replaced using your matching word pairs
+3. **Boundaries**: Uses word boundaries to avoid partial replacements
 
 ### 🗑️ Word Removal
 
-Remove unwanted words or patterns from subtitles using the `--removal-file` option:
+Remove unwanted words or patterns from subtitles:
 
-#### 📄 Removal File Format
-
-```
-damn
-shit
-hell
-{\an8}
-[MUSIC]
-```
-
-#### 🎯 Smart Pattern Matching
-
-- **📝 Normal words**: Uses word boundaries (removes "word" from "word text" but not from "password")
-- **🔧 Special patterns**: Removes pattern anywhere it appears (removes `{\an8}` from `{\an8}text`)
+- **Normal words**: Uses word boundaries (removes "word" from "word text" but not from "password")
+- **Special patterns**: Removes pattern anywhere it appears (e.g., `{\an8}`)
 
 ### 📝 Smart Credits Management
 
-#### ⚙️ Credit Options
-
-- **`--replace-old-credits`** (default: True): Replaces existing translator credits with yours
-- **`--add-new-credits`** (default: True): Intelligently adds translator credits
-- **`--append-credits-at-the-end`** (default: False): Forces credits at the end
-
-#### ⚡ How It Works
-
-1. **📊 Gap Analysis**: Analyzes timing gaps between subtitles (≥5 seconds)
-2. **🎯 Optimal Placement**: Inserts credits in the largest suitable gap
-3. **🔄 Fallback**: If no suitable gap exists, credits are added at the end
-4. **⚙️ Force End Option**: Use `--append-credits-at-the-end` to always put credits at the end
+- **Replace old credits**: Detects and replaces existing translator credits
+- **Add new credits**: Analyzes timing gaps (≥5 seconds) to find optimal placement
+- **Fallback**: If no suitable gap exists, credits are added at the end
+- **Force end**: Option to always place credits at the end of the file
 
 ### 🔄 Processing Order
 
-The tool processes subtitles in the following order:
+1. **Credit Replacement** — Replace existing translator credits (if enabled)
+2. **Word Removal** — Remove specified words from original text
+3. **Translation** — Translate text using OpenAI (parallel, 4 concurrent)
+4. **Word Replacement** — Apply matching word pairs
+5. **Structure Restoration** — Restore formatting and timing
+6. **Credits Insertion** — Add translator credits at optimal location
 
-1. **🔄 Credit Replacement**: Replace existing translator credits (if enabled)
-2. **🗑️ Word Removal**: Remove specified words from original text
-3. **🌐 Translation**: Translate remaining text using OpenAI
-4. **🔄 Word Replacement**: Apply word replacements from matching file
-5. **🏗️ Structure Restoration**: Restore formatting and timing
-6. **📝 Smart Credits Insertion**: Add translator credits in optimal location
+### 🔐 Per-User Isolation
 
-## 📝 Complete Example
+Each browser receives a unique session cookie (`session_id`, 30-day expiry). All file operations are scoped to this session:
 
-### 📄 Input File (`sample.srt`)
+- Uploads go to `data/subtitles/{session_id}/`
+- Translations output to `data/translated/{session_id}/`
+- One user cannot see another user's files
 
-```srt
-1
-00:00:01,000 --> 00:00:03,500
-Hello, this is a <i>sample</i> subtitle with Demon Slayer Corps.
+### 🔄 Persistent Translation State
 
-2
-00:00:04,000 --> 00:00:06,500
-Character says: "Thank you, sensei!" about Water Breathing.
+Translation progress is managed by a global React Context (`TranslationContext`). This means:
 
-3
-00:00:07,000 --> 00:00:09,500
-Translated by Original Translator
-```
+- You can navigate to Settings while a translation is running
+- Progress bars, completed files, and download links persist when you return
+- The WebSocket connection stays alive across page changes
 
-### 📄 Matching File (`anime_terms.txt`)
+## 🌐 Deployment (Coolify)
 
-```
-Demon Slayer Corps --> Σώμα Εξολοθρευτών Δαιμόνων
-Water Breathing --> Αναπνοή του Νερού
-```
+To deploy on Coolify:
 
-### 💻 Command
+1. **Add Resource** → GitHub repository → select `srt-translator`
+2. **Build Pack** → `Dockerfile`
+3. **Ports Exposes** → `8000`
+4. **Domains** → your domain (e.g., `https://srt-translator.example.com`)
+5. **Deploy**
 
-```bash
-srt-translate sample.srt output.srt \
-  --matching anime_terms.txt \
-  --translator-name "Ntamas"
-```
+If using Cloudflare proxy, set SSL mode to **Full**.
 
-### 📄 Output File (`output.srt`)
-
-```srt
-1
-00:00:01,000 --> 00:00:03,500
-Γεια σας, αυτός είναι ένας <i>δείγμα</i> υπότιτλος με Σώμα Εξολοθρευτών Δαιμόνων.
-
-2
-00:00:04,000 --> 00:00:06,500
-Ο χαρακτήρας λέει: "Ευχαριστώ, sensei!" για Αναπνοή του Νερού.
-
-3
-00:00:07,000 --> 00:00:09,500
-Translated by Ntamas with AI
-```
-
-## 🛠️ Error Handling
-
-The tool implements multiple retry strategies:
-
-1. **📦 Batch Translation**: Attempts to translate all lines in one API call
-2. **📝 Indexed Translation**: Adds line numbers to help model maintain structure
-3. **📄 Line-by-Line Fallback**: Translates each line individually if batch fails
-
-If translation fails completely, the original line is preserved.
-
-## 📋 Requirements
-
-- Python 3.9+
-- OpenAI API key
-- Dependencies: `openai`, `srt`, `python-dotenv`, `tqdm`
-
-## 🧪 Development
-
-### 🧪 Running Tests
-
-```bash
-pytest
-```
-
-### 📁 Project Structure
-
-```
-src/srt_chatgpt_translator/
-├── __init__.py          # Package initialization
-├── cli.py              # Command-line interface
-├── translate.py        # Main translation logic
-├── openai_client.py    # OpenAI API wrapper
-├── placeholders.py     # HTML/word protection & replacement
-├── credits.py          # Credits detection & replacement
-└── word_removal.py     # Word removal functionality
-```
+The Dockerfile uses a multi-stage build:
+- **Stage 1**: `node:22-alpine` builds the frontend (`npm ci && npm run build`)
+- **Stage 2**: `python:3.13-slim` runs the backend + serves the built frontend
+- Built-in health check at `/api/health`
 
 ## ☕ Support the Project
 
-If this tool has been helpful for your subtitle translation projects, consider supporting its development!
+If this tool has been helpful, consider supporting its development!
 
 <div align="center">
 
@@ -351,16 +262,10 @@ If this tool has been helpful for your subtitle translation projects, consider s
 
 </div>
 
-### 🌟 Other Ways to Support
-
 - ⭐ **Star this repository** on GitHub
-- 🐦 **Share it** on social media - mention [@ntamasM](https://github.com/ntamasM)
 - 🐛 **Report bugs** or suggest features
-- 📖 **Contribute** to the documentation
 - 💬 **Spread the word** to other subtitle translators
-
-Every bit of support helps maintain and improve this tool! 🚀
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE) file for details.
