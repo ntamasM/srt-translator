@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 from tqdm import tqdm
 
-from .openai_client import OpenAITranslationClient
+from .client_factory import create_translation_client
 from .placeholders import PlaceholderManager, load_matching_file, load_replacement_mapping
 from .credits import CreditsDetector
 from .word_removal import WordRemover
@@ -20,12 +20,13 @@ class SRTTranslator:
                  matching_file: Optional[str] = None, 
                  matching_case_insensitive: bool = False,
                  replace_credits: bool = True,
-                 translator_name: str = "Ntamas",
-                 removal_file: Optional[str] = None):
+                 translator_name: str = "AI",
+                 removal_file: Optional[str] = None,
+                 ai_platform: str = "openai"):
         """Initialize the SRT translator.
         
         Args:
-            api_key: OpenAI API key
+            api_key: API key for the chosen AI platform
             model: Model to use for translation
             temperature: Sampling temperature
             top_p: Top-p sampling parameter
@@ -34,8 +35,15 @@ class SRTTranslator:
             replace_credits: Whether to replace translator credits
             translator_name: Name of the translator to use in credits
             removal_file: Path to file containing words to completely remove
+            ai_platform: AI provider to use (openai, gemini, claude)
         """
-        self.client = OpenAITranslationClient(api_key, model, temperature, top_p)
+        self.client = create_translation_client(
+            ai_platform=ai_platform,
+            api_key=api_key,
+            model=model,
+            temperature=temperature,
+            top_p=top_p,
+        )
         
         # Load matching terms and replacement mapping
         matching_terms = []
@@ -294,86 +302,108 @@ class SRTTranslator:
             index=max_index + 1,
             start=watermark_start,
             end=watermark_end,
-            content=f"Translated by {self.translator_name} with AI"
+            content=f"Translated by {self.translator_name} with the help of AI"
         )
 
-    def _find_best_gap_for_credits(self, subtitles: List[srt.Subtitle], min_gap_seconds: float = 5.0) -> tuple:
-        """Find the best gap between subtitles to insert credits.
-        
-        Args:
-            subtitles: List of subtitle objects
-            min_gap_seconds: Minimum gap size in seconds to consider
-            
+    def _find_best_gap_for_credits(self, subtitles: List[srt.Subtitle], min_gap_seconds: float = 3.0) -> tuple:
+        """Find the best gap near the centre of the subtitle timeline.
+
+        Strategy:
+        1. Compute the total duration (first start → last end).
+        2. Define a *centre zone* from 1/3 to 2/3 of total duration.
+        3. Collect every gap ≥ *min_gap_seconds* that falls within (or
+           overlaps) the centre zone.
+        4. Among those, pick the one whose midpoint is closest to the
+           exact centre of the timeline.
+        5. If nothing qualifies inside the centre zone, fall back to the
+           best gap anywhere.
+
         Returns:
-            Tuple of (insert_after_index, gap_seconds, start_time, end_time) or (None, 0, None, None) if no suitable gap
+            ``(insert_after_index, gap_seconds, credit_start, credit_end)``
+            or ``(None, 0, None, None)`` when no usable gap exists.
         """
         if len(subtitles) < 2:
             return None, 0, None, None
-        
-        best_gap = None
-        best_gap_seconds = 0
-        
+
+        # Timeline boundaries
+        timeline_start = subtitles[0].start
+        timeline_end = subtitles[-1].end
+        total_seconds = (timeline_end - timeline_start).total_seconds()
+        if total_seconds <= 0:
+            return None, 0, None, None
+
+        centre_time = timeline_start + srt.timedelta(seconds=total_seconds / 2)
+        zone_start = timeline_start + srt.timedelta(seconds=total_seconds / 3)
+        zone_end = timeline_start + srt.timedelta(seconds=2 * total_seconds / 3)
+
+        # Gather all usable gaps
+        all_gaps = []  # (position_index, gap_seconds, credit_start, credit_end, distance_to_centre)
         for i in range(len(subtitles) - 1):
             current_end = subtitles[i].end
             next_start = subtitles[i + 1].start
-            gap_seconds = (next_start - current_end).total_seconds()
-            
-            # Check if this gap is suitable and better than current best
-            if gap_seconds >= min_gap_seconds and gap_seconds > best_gap_seconds:
-                # Calculate credit timing (centered in the gap with 3-second duration)
-                gap_center = current_end + srt.timedelta(seconds=gap_seconds / 2)
-                credit_start = gap_center - srt.timedelta(seconds=1.5)
-                credit_end = gap_center + srt.timedelta(seconds=1.5)
-                
-                # Make sure credits don't overlap with existing subtitles
-                if credit_start >= current_end and credit_end <= next_start:
-                    best_gap = (subtitles[i].index, gap_seconds, credit_start, credit_end)
-                    best_gap_seconds = gap_seconds
-        
-        if best_gap:
-            return best_gap
-        else:
+            gap_secs = (next_start - current_end).total_seconds()
+
+            if gap_secs < min_gap_seconds:
+                continue
+
+            # Centre the 3-second credit inside the gap
+            gap_midpoint = current_end + srt.timedelta(seconds=gap_secs / 2)
+            credit_start = gap_midpoint - srt.timedelta(seconds=1.5)
+            credit_end = gap_midpoint + srt.timedelta(seconds=1.5)
+
+            # Make sure credits don't overlap neighbours
+            if credit_start < current_end or credit_end > next_start:
+                continue
+
+            distance = abs((gap_midpoint - centre_time).total_seconds())
+            in_zone = (gap_midpoint >= zone_start and gap_midpoint <= zone_end)
+
+            all_gaps.append((subtitles[i].index, gap_secs, credit_start, credit_end, distance, in_zone))
+
+        if not all_gaps:
             return None, 0, None, None
 
+        # Prefer gaps inside the centre zone; among those pick closest to centre
+        centre_gaps = [g for g in all_gaps if g[5]]
+        if centre_gaps:
+            best = min(centre_gaps, key=lambda g: g[4])
+        else:
+            # Fallback: closest gap to centre anywhere
+            best = min(all_gaps, key=lambda g: g[4])
+
+        return best[0], best[1], best[2], best[3]
+
     def _insert_credits_smartly(self, subtitles: List[srt.Subtitle]) -> List[srt.Subtitle]:
-        """Insert credits either in a suitable gap or at the end.
-        
-        Args:
-            subtitles: List of subtitle objects
-            
-        Returns:
-            List of subtitles with credits inserted
+        """Insert credits near the centre of the subtitle timeline.
+
+        Finds the best gap in the middle third of the file so the credits
+        are likely to be seen by the viewer. Falls back to appending at the
+        end if no suitable gap exists.
         """
         if not subtitles:
             return subtitles
-        
-        # Try to find a good gap for credits
+
         insert_after_index, gap_seconds, credit_start, credit_end = self._find_best_gap_for_credits(subtitles)
-        
+
         if insert_after_index is not None:
-            # Insert credits in the gap
-            # Find the position to insert (after the subtitle with insert_after_index)
             insert_position = next(i for i, sub in enumerate(subtitles) if sub.index == insert_after_index) + 1
-            
-            # Create credits subtitle
+
             credits_subtitle = srt.Subtitle(
-                index=len(subtitles) + 1,  # Will be renumbered later
+                index=len(subtitles) + 1,
                 start=credit_start,
                 end=credit_end,
-                content=f"Translated by {self.translator_name} with AI"
+                content=f"Translated by {self.translator_name} with the help of AI"
             )
-            
-            # Insert credits and renumber all subsequent subtitles
+
             result = subtitles[:insert_position] + [credits_subtitle] + subtitles[insert_position:]
-            
-            # Renumber all subtitles to maintain sequence
+
             for i, subtitle in enumerate(result, 1):
                 subtitle.index = i
-            
-            print(f"Credits inserted in {gap_seconds:.1f}s gap after subtitle {insert_after_index}")
+
+            minutes = credit_start.total_seconds() / 60
+            print(f"Credits inserted at {minutes:.1f}min (in {gap_seconds:.1f}s gap after subtitle {insert_after_index})")
             return result
         else:
-            # No suitable gap found, append at the end
             credits_subtitle = self._create_watermark_cue(subtitles)
             print("Credits appended at the end (no suitable gap found)")
             return subtitles + [credits_subtitle]

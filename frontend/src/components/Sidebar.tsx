@@ -7,6 +7,7 @@ import {
   Trash2,
   Clapperboard,
   FolderOpen,
+  Info,
 } from "lucide-react";
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
   { to: "/settings/general", label: "General", icon: Settings },
   { to: "/settings/matching", label: "Matching Words", icon: BookOpen },
   { to: "/settings/removal", label: "Remove Words", icon: Trash2 },
+  { to: "/about", label: "About", icon: Info },
 ];
 
 export default function Sidebar() {

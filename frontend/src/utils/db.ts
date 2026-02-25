@@ -19,7 +19,7 @@ const DEFAULT_SETTINGS: Settings = {
   top_p: 0.1,
   src_lang: "en",
   tgt_lang: "el",
-  translator_name: "Ntamas",
+  translator_name: "AI",
   matching_case_insensitive: false,
   replace_credits: true,
   add_credits: true,

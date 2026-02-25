@@ -10,13 +10,14 @@ class MatchingWordEntry(BaseModel):
 
 
 class TranslationSettings(BaseModel):
+    ai_platform: str = "openai"
     api_key: str
     model: str = "gpt-4o-mini"
     temperature: float = 0.2
     top_p: float = 0.1
     src_lang: str = "en"
     tgt_lang: str = "el"
-    translator_name: str = "Ntamas"
+    translator_name: str = "AI"
     matching_case_insensitive: bool = False
     replace_credits: bool = True
     add_credits: bool = True

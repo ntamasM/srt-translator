@@ -9,19 +9,28 @@ from openai import OpenAI
 
 
 class OpenAITranslationClient:
-    """Client for translating text using OpenAI's Responses API with structured output."""
+    """Client for translating text using OpenAI's Chat Completions API with structured output.
+
+    Also works with any OpenAI-compatible endpoint (e.g. Google Gemini) by
+    passing a custom *base_url*.
+    """
     
     def __init__(self, api_key: str, model: str = "gpt-4o-mini", 
-                 temperature: float = 0.2, top_p: float = 0.1):
-        """Initialize the OpenAI client.
+                 temperature: float = 0.2, top_p: float = 0.1,
+                 base_url: Optional[str] = None):
+        """Initialize the OpenAI-compatible client.
         
         Args:
-            api_key: OpenAI API key
+            api_key: API key for the provider
             model: Model to use for translation
             temperature: Sampling temperature
             top_p: Top-p sampling parameter
+            base_url: Optional base URL for OpenAI-compatible endpoints
         """
-        self.client = OpenAI(api_key=api_key, timeout=60.0)
+        kwargs: Dict[str, Any] = {"api_key": api_key, "timeout": 60.0}
+        if base_url:
+            kwargs["base_url"] = base_url
+        self.client = OpenAI(**kwargs)
         self.model = model
         self.temperature = temperature
         self.top_p = top_p

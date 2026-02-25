@@ -112,8 +112,8 @@ async def run_translation(
     matching_file = _write_temp_matching(job["matching_words"])
     removal_file = _write_temp_removal(job["removal_words"])
 
-    # API key from request settings; fall back to env
-    api_key = config.get("api_key") or os.environ.get("OPENAI_API_KEY", "")
+    # API key from request settings only (no env fallback)
+    api_key = config.get("api_key", "")
 
     if not api_key:
         job["status"] = "error"
@@ -132,8 +132,9 @@ async def run_translation(
         matching_file=matching_file,
         matching_case_insensitive=config.get("matching_case_insensitive", False),
         replace_credits=config.get("replace_credits", True),
-        translator_name=config.get("translator_name", "Ntamas"),
+        translator_name=config.get("translator_name") or "AI",
         removal_file=removal_file,
+        ai_platform=config.get("ai_platform", "openai"),
     )
 
     src_lang = config.get("src_lang", "en")

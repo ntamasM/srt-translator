@@ -16,6 +16,7 @@ export const translationApi = {
     post<TranslationResult>("/translate", {
       files,
       settings: {
+        ai_platform: settings.ai_platform,
         api_key: settings.api_key,
         model: settings.model,
         temperature: settings.temperature,
