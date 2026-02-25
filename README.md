@@ -4,7 +4,7 @@ A full-stack web application for translating SubRip (.srt) subtitle files using 
 
 <div align="center">
 
-[![Buy Me A Coffee](https://img.shields.io/badge/☕-Support%20Me-orange?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/ntamadakis.m)
+[![Support Me](https://img.shields.io/badge/☕-Support%20Me-orange?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://ntamadakis.gr/support-me)
 [![GitHub stars](https://img.shields.io/github/stars/ntamasM/srt-translator?style=for-the-badge&logo=github)](https://github.com/ntamasM/srt-translator/stargazers)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
@@ -273,7 +273,7 @@ If this tool has been helpful, consider supporting its development!
 
 <div align="center">
 
-[![Buy Me A Coffee](https://img.shields.io/badge/☕-Buy%20Me%20A%20Coffee-orange?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/ntamadakis.m)
+[![Support Me](https://img.shields.io/badge/☕-Support%20Me-orange?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://ntamadakis.gr/support-me)
 
 </div>
 
