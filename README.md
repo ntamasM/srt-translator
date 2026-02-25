@@ -1,6 +1,6 @@
 # 🎬 SRT Translator
 
-A full-stack web application for translating SubRip (.srt) subtitle files using OpenAI's API. Features a React frontend with per-user file isolation, real-time translation progress via WebSocket, and all settings stored client-side in IndexedDB.
+A full-stack web app for translating SubRip (.srt) subtitle files using OpenAI, Claude, Gemini, and DeepSeek — with real-time progress, structure preservation, and per-user file isolation.
 
 <div align="center">
 
