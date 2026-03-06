@@ -9,11 +9,18 @@ import MatchingWords from "./pages/settings/MatchingWords";
 import RemoveWords from "./pages/settings/RemoveWords";
 import { ToastProvider } from "./components/Toast";
 import { TranslationProvider } from "./contexts/TranslationContext";
+import { useTheme } from "./hooks/useTheme";
+
+function ThemeLoader() {
+  useTheme();
+  return null;
+}
 
 export default function App() {
   return (
     <ToastProvider>
       <TranslationProvider>
+        <ThemeLoader />
         <BrowserRouter>
           <Routes>
             <Route element={<Layout />}>

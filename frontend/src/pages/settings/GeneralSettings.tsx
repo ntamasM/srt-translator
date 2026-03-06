@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Save, Eye, EyeOff } from "lucide-react";
+import { Save, Eye, EyeOff, Sun, Moon, Monitor } from "lucide-react";
 import Button from "../../components/Button";
 import InputField from "../../components/InputField";
 import SelectField from "../../components/SelectField";
 import { useSettings } from "../../hooks/useSettings";
+import { useTheme } from "../../hooks/useTheme";
 import { useToast } from "../../components/Toast";
 import { AI_PLATFORMS, DEFAULT_MODELS } from "../../utils/constants";
 import type { Settings } from "../../types/settings";
+import type { Theme } from "../../types/settings";
 
 export default function GeneralSettings() {
   const { settings, isLoading, updateSettings } = useSettings();
+  const { theme, setTheme } = useTheme();
   const { addToast } = useToast();
   const [form, setForm] = useState<Partial<Settings>>({});
   const [showKey, setShowKey] = useState(false);
@@ -48,7 +51,7 @@ export default function GeneralSettings() {
 
   if (isLoading || !form.ai_platform) {
     return (
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-base-content/60 dark:text-dark-base-content/50">
         Loading settings…
       </p>
     );
@@ -56,6 +59,38 @@ export default function GeneralSettings() {
 
   return (
     <div className="space-y-6">
+      {/* Theme */}
+      <div>
+        <label className="mb-2 block text-sm font-medium text-base-content/80 dark:text-dark-base-content">
+          Theme
+        </label>
+        <div className="inline-flex gap-1 rounded-lg bg-base-200 p-1 dark:bg-dark-base-200">
+          {(
+            [
+              { value: "light", icon: <Sun size={16} />, label: "Light" },
+              { value: "dark", icon: <Moon size={16} />, label: "Dark" },
+              { value: "system", icon: <Monitor size={16} />, label: "System" },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setTheme(opt.value)}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                theme === opt.value
+                  ? "bg-base-100 text-primary shadow-sm dark:bg-dark-base-300 dark:text-dark-primary"
+                  : "text-base-content/60 hover:text-base-content dark:text-dark-base-content/50 dark:hover:text-dark-base-content"
+              }`}
+            >
+              {opt.icon}
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
+          Choose light, dark, or follow your operating system preference.
+        </p>
+      </div>
+
       {/* AI Platform */}
       <SelectField
         label="AI Platform"
@@ -67,7 +102,7 @@ export default function GeneralSettings() {
 
       {/* API Key */}
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="mb-1 block text-sm font-medium text-base-content/80 dark:text-dark-base-content">
           API Key
         </label>
         <div className="flex gap-2">
@@ -75,18 +110,18 @@ export default function GeneralSettings() {
             type={showKey ? "text" : "password"}
             value={form.api_key || ""}
             onChange={(e) => handleChange("api_key", e.target.value)}
-            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="flex-1 rounded-lg border border-base-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
             placeholder="sk-..."
           />
           <button
             type="button"
             onClick={() => setShowKey(!showKey)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+            className="rounded-lg border border-base-300 px-3 py-2 text-base-content/60 hover:bg-base-100 dark:border-dark-base-300 dark:hover:bg-dark-base-200"
           >
             {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
           Your API key for the selected AI platform. Required to run
           translations. Stored locally in your browser only.
         </p>
@@ -103,7 +138,7 @@ export default function GeneralSettings() {
       {/* Temperature & Top-P */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="mb-1 block text-sm font-medium text-base-content/80 dark:text-dark-base-content">
             Temperature ({form.temperature})
           </label>
           <input
@@ -117,13 +152,13 @@ export default function GeneralSettings() {
             }
             className="w-full"
           />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
             Controls randomness. Lower values (0.1–0.3) produce more consistent
             translations; higher values add variety.
           </p>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="mb-1 block text-sm font-medium text-base-content/80 dark:text-dark-base-content">
             Top-P ({form.top_p})
           </label>
           <input
@@ -135,7 +170,7 @@ export default function GeneralSettings() {
             onChange={(e) => handleChange("top_p", parseFloat(e.target.value))}
             className="w-full"
           />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
             Nucleus sampling threshold. Lower values make output more focused
             and deterministic.
           </p>
@@ -168,7 +203,7 @@ export default function GeneralSettings() {
 
       {/* Checkboxes */}
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <h3 className="text-sm font-semibold text-base-content/80 dark:text-dark-base-content">
           Credits Options
         </h3>
         {(
@@ -197,17 +232,17 @@ export default function GeneralSettings() {
         ).map(([key, label, description]) => (
           <label
             key={key}
-            className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
+            className="flex items-start gap-2 text-sm text-base-content/80 dark:text-dark-base-content"
           >
             <input
               type="checkbox"
               checked={!!(form as any)[key]}
               onChange={(e) => handleChange(key, e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="mt-0.5 h-4 w-4 rounded border-base-300 text-primary-600 focus:ring-primary-500"
             />
             <div>
               <span>{label}</span>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-base-content/60 dark:text-dark-base-content/50">
                 {description}
               </p>
             </div>

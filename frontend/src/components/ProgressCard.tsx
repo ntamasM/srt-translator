@@ -21,9 +21,9 @@ export default function ProgressCard({
       : 0;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <div className="rounded-lg border border-base-300 bg-base-100 p-4 shadow-sm dark:border-dark-base-300 dark:bg-dark-base-200">
       <div className="mb-2 flex items-center justify-between">
-        <span className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
+        <span className="truncate text-sm font-medium text-base-content dark:text-dark-base-content">
           {progress.filename}
         </span>
         <div className="flex items-center gap-2">
@@ -31,7 +31,7 @@ export default function ProgressCard({
           {progress.status === "done" && onDownload && (
             <button
               onClick={onDownload}
-              className="rounded p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+              className="rounded p-1 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30"
               title="Download"
             >
               <Download size={16} />
@@ -40,11 +40,11 @@ export default function ProgressCard({
         </div>
       </div>
       <ProgressBar value={pct} />
-      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
         {progress.current} / {progress.total} cues translated
       </p>
       {progress.error && (
-        <p className="mt-1 text-xs text-red-600">{progress.error}</p>
+        <p className="mt-1 text-xs text-error">{progress.error}</p>
       )}
     </div>
   );

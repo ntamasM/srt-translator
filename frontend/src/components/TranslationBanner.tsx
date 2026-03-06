@@ -34,30 +34,30 @@ export default function TranslationBanner() {
   > = {
     translating: {
       icon: <Loader2 size={16} className="animate-spin" />,
-      bg: "bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-700",
-      bar: "bg-blue-500",
-      text: "text-blue-700 dark:text-blue-300",
+      bg: "bg-primary-50 border-primary-200 dark:bg-primary-900/30 dark:border-primary-700",
+      bar: "bg-primary-500",
+      text: "text-primary-700 dark:text-primary-300",
       label: `Translating… ${pct}% (${completedFiles.length}/${totalFiles} files)`,
     },
     complete: {
       icon: <CheckCircle size={16} />,
-      bg: "bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-700",
-      bar: "bg-green-500",
-      text: "text-green-700 dark:text-green-300",
+      bg: "bg-success/10 border-success/30 dark:bg-dark-success/20 dark:border-dark-success/30",
+      bar: "bg-success/100",
+      text: "text-success dark:text-dark-success",
       label: `Translation complete — ${totalFiles} file(s) ready`,
     },
     cancelled: {
       icon: <XCircle size={16} />,
-      bg: "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-700",
-      bar: "bg-yellow-500",
-      text: "text-yellow-700 dark:text-yellow-300",
+      bg: "bg-warning/10 border-warning/30 dark:bg-dark-warning/20 dark:border-dark-warning/30",
+      bar: "bg-warning/100",
+      text: "text-warning-content dark:text-dark-warning",
       label: "Translation cancelled",
     },
     error: {
       icon: <AlertCircle size={16} />,
-      bg: "bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-700",
-      bar: "bg-red-500",
-      text: "text-red-700 dark:text-red-300",
+      bg: "bg-error/10 border-error/30 dark:bg-dark-error/20 dark:border-dark-error/50",
+      bar: "bg-error/100",
+      text: "text-error dark:text-dark-error",
       label: error || "Translation failed",
     },
   };
@@ -74,7 +74,7 @@ export default function TranslationBanner() {
 
       {/* Mini progress bar */}
       {status === "translating" && (
-        <div className="ml-auto h-1.5 w-32 overflow-hidden rounded-full bg-blue-200 dark:bg-blue-800">
+        <div className="ml-auto h-1.5 w-32 overflow-hidden rounded-full bg-primary-200 dark:bg-primary-800">
           <div
             className={`h-full rounded-full transition-all duration-300 ${c.bar}`}
             style={{ width: `${pct}%` }}

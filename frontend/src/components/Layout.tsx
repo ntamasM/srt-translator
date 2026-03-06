@@ -5,7 +5,7 @@ import TranslationBanner from "./TranslationBanner";
 
 export default function Layout() {
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen bg-base-100 dark:bg-dark-base-100">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <TranslationBanner />

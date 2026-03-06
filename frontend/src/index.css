@@ -1,1 +1,73 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Primary — teal from logo #41AE98 */
+  --color-primary: #41ae98;
+  --color-primary-content: #edf8f6;
+
+  /* Secondary — charcoal from logo #272727 */
+  --color-secondary: #272727;
+  --color-secondary-content: #d1d1d1;
+
+  /* Accent — lighter teal complement */
+  --color-accent: #6fc9ba;
+  --color-accent-content: #10332c;
+
+  /* Neutral — dark charcoal */
+  --color-neutral: #1a1a1a;
+  --color-neutral-content: #d1d1d1;
+
+  /* Base — backgrounds */
+  --color-base-100: #edf8f6;
+  --color-base-200: #d1efe9;
+  --color-base-300: #a3dfd4;
+  --color-base-content: #272727;
+
+  /* Info */
+  --color-info: #3abff8;
+  --color-info-content: #003b57;
+
+  /* Success */
+  --color-success: #36d399;
+  --color-success-content: #003320;
+
+  /* Warning */
+  --color-warning: #fbbd23;
+  --color-warning-content: #382800;
+
+  /* Error */
+  --color-error: #f87272;
+  --color-error-content: #470000;
+
+  /* ——— Dark palette ——— */
+  --color-dark-primary: #4cc5ac;
+  --color-dark-primary-content: #0a2119;
+
+  --color-dark-secondary: #3a3a3a;
+  --color-dark-secondary-content: #e8e8e8;
+
+  --color-dark-accent: #a3dfd4;
+  --color-dark-accent-content: #0a2119;
+
+  --color-dark-neutral: #272727;
+  --color-dark-neutral-content: #d1d1d1;
+
+  --color-dark-base-100: #1a1a1a;
+  --color-dark-base-200: #272727;
+  --color-dark-base-300: #3a3a3a;
+  --color-dark-base-content: #e8e8e8;
+
+  --color-dark-info: #5cc8f8;
+  --color-dark-info-content: #003b57;
+
+  --color-dark-success: #5edba8;
+  --color-dark-success-content: #003320;
+
+  --color-dark-warning: #fcc84d;
+  --color-dark-warning-content: #382800;
+
+  --color-dark-error: #fa9a9a;
+  --color-dark-error-content: #470000;
+}

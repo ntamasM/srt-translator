@@ -242,7 +242,7 @@ export default function MatchingWords() {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-sm text-base-content/70 dark:text-dark-base-content/50">
         Matching words are protected during translation. Source terms are
         shielded from the AI, then replaced with the target term in the final
         output. Format: <code className="text-xs">source --&gt; target</code>
@@ -254,14 +254,14 @@ export default function MatchingWords() {
           value={source}
           onChange={(e) => setSource(e.target.value)}
           placeholder="Source term"
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="flex-1 rounded-lg border border-base-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
         />
-        <ArrowRight size={18} className="mt-2.5 text-gray-400" />
+        <ArrowRight size={18} className="mt-2.5 text-base-content/50" />
         <input
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           placeholder="Target term"
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="flex-1 rounded-lg border border-base-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
         />
         <Button onClick={handleAdd} icon={<Plus size={16} />}>
           Add
@@ -279,20 +279,20 @@ export default function MatchingWords() {
       <div className="relative">
         <Search
           size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50"
         />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Filter…"
-          className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="w-full rounded-lg border border-base-300 py-2 pl-9 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
         />
       </div>
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-900/20">
-          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+        <div className="flex items-center gap-2 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 dark:border-primary-800 dark:bg-primary-900/20">
+          <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
             {selected.size} selected
           </span>
           <div className="ml-auto flex gap-2">
@@ -328,7 +328,7 @@ export default function MatchingWords() {
                   variant="secondary"
                   onClick={handleBulkDelete}
                   icon={<Trash2 size={14} />}
-                  className="!px-3 !py-1 !text-xs border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                  className="!px-3 !py-1 !text-xs border-error/50 text-error hover:bg-error/10 dark:border-dark-error/50 dark:text-error dark:hover:bg-dark-error/10"
                 >
                   Delete Selected
                 </Button>
@@ -348,20 +348,20 @@ export default function MatchingWords() {
 
       {/* List */}
       {loading ? (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <p className="text-sm text-base-content/60">Loading…</p>
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-gray-500">No matching words found.</p>
+        <p className="text-sm text-base-content/60">No matching words found.</p>
       ) : (
         <div className="max-h-112 space-y-1 overflow-y-auto">
           {/* Select-all header */}
           <button
             onClick={toggleSelectAll}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-base-content/60 hover:bg-base-100 dark:text-dark-base-content/50 dark:hover:bg-dark-base-200"
           >
             {selected.size === filtered.length ? (
-              <CheckSquare size={14} className="text-blue-600" />
+              <CheckSquare size={14} className="text-primary-600" />
             ) : selected.size > 0 ? (
-              <MinusSquare size={14} className="text-blue-600" />
+              <MinusSquare size={14} className="text-primary-600" />
             ) : (
               <Square size={14} />
             )}
@@ -378,28 +378,28 @@ export default function MatchingWords() {
               return (
                 <div
                   key={w.source}
-                  className="flex items-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 dark:border-blue-700 dark:bg-blue-900/20"
+                  className="flex items-center gap-2 rounded-lg border border-primary-300 bg-primary-50 px-3 py-2 dark:border-primary-700 dark:bg-primary-900/20"
                 >
                   <input
                     value={editSource}
                     onChange={(e) => setEditSource(e.target.value)}
-                    className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    className="flex-1 rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
                   />
-                  <ArrowRight size={14} className="text-gray-400" />
+                  <ArrowRight size={14} className="text-base-content/50" />
                   <input
                     value={editTarget}
                     onChange={(e) => setEditTarget(e.target.value)}
-                    className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    className="flex-1 rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
                   />
                   <button
                     onClick={saveEdit}
-                    className="rounded p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30"
+                    className="rounded p-1 text-success hover:bg-success/10 dark:hover:bg-dark-success/20"
                   >
                     <Check size={16} />
                   </button>
                   <button
                     onClick={cancelEdit}
-                    className="rounded p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="rounded p-1 text-base-content/50 hover:bg-base-200 dark:hover:bg-dark-base-200"
                   >
                     <X size={16} />
                   </button>
@@ -412,28 +412,28 @@ export default function MatchingWords() {
               return (
                 <div
                   key={w.source}
-                  className="flex items-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 dark:border-blue-700 dark:bg-blue-900/20"
+                  className="flex items-center gap-2 rounded-lg border border-primary-300 bg-primary-50 px-3 py-2 dark:border-primary-700 dark:bg-primary-900/20"
                 >
                   <input
                     type="checkbox"
                     checked
                     onChange={() => toggleSelect(w.source)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-base-300 text-primary-600 focus:ring-primary-500"
                   />
                   <input
                     value={edit.source}
                     onChange={(e) =>
                       updateBulkEdit(w.source, "source", e.target.value)
                     }
-                    className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    className="flex-1 rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
                   />
-                  <ArrowRight size={14} className="text-gray-400" />
+                  <ArrowRight size={14} className="text-base-content/50" />
                   <input
                     value={edit.target}
                     onChange={(e) =>
                       updateBulkEdit(w.source, "target", e.target.value)
                     }
-                    className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    className="flex-1 rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
                   />
                 </div>
               );
@@ -444,8 +444,8 @@ export default function MatchingWords() {
                 key={w.source}
                 className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
                   isSelected
-                    ? "border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/10"
-                    : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+                    ? "border-primary-300 bg-primary-50 dark:border-primary-700 dark:bg-primary-900/10"
+                    : "border-base-300 bg-base-100 dark:border-dark-base-300 dark:bg-dark-base-200"
                 }`}
               >
                 <div className="flex items-center gap-2 text-sm">
@@ -453,26 +453,26 @@ export default function MatchingWords() {
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => toggleSelect(w.source)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-base-300 text-primary-600 focus:ring-primary-500"
                   />
-                  <span className="font-medium text-gray-800 dark:text-gray-200">
+                  <span className="font-medium text-base-content dark:text-dark-base-content">
                     {w.source}
                   </span>
-                  <ArrowRight size={14} className="text-gray-400" />
-                  <span className="text-gray-600 dark:text-gray-400">
+                  <ArrowRight size={14} className="text-base-content/50" />
+                  <span className="text-base-content/70 dark:text-dark-base-content/50">
                     {w.target}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => startEdit(realIdx)}
-                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-700"
+                    className="rounded p-1 text-base-content/50 hover:bg-base-200 hover:text-primary-600 dark:hover:bg-dark-base-300"
                   >
                     <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => handleDelete(w.source)}
-                    className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+                    className="rounded p-1 text-base-content/50 hover:bg-error/10 hover:text-error dark:hover:bg-dark-error/10"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -483,7 +483,7 @@ export default function MatchingWords() {
         </div>
       )}
 
-      <p className="text-xs text-gray-500 dark:text-gray-400">
+      <p className="text-xs text-base-content/60 dark:text-dark-base-content/50">
         {words.length} matching word{words.length !== 1 ? "s" : ""} total
       </p>
 
@@ -504,9 +504,9 @@ export default function MatchingWords() {
         }
       >
         <div className="space-y-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-base-content/60 dark:text-dark-base-content/50">
             Paste or upload a JSON array. Format:{" "}
-            <code className="rounded bg-gray-100 px-1 dark:bg-gray-700">
+            <code className="rounded bg-base-200 px-1 dark:bg-dark-base-300">
               {'[{"source": "...", "target": "..."}]'}
             </code>
           </p>
@@ -515,7 +515,7 @@ export default function MatchingWords() {
             onChange={(e) => setBulkJson(e.target.value)}
             rows={8}
             placeholder='[{"source": "Tanjiro", "target": "Τανζίρο"}]'
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded-lg border border-base-300 px-3 py-2 font-mono text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
           />
           <input
             ref={fileInputRef}

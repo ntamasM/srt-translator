@@ -5,10 +5,10 @@ import {
   Settings,
   BookOpen,
   Trash2,
-  Clapperboard,
   FolderOpen,
   Info,
 } from "lucide-react";
+import logoIcon from "../../assets/icons/Srt-Translator--icon.svg";
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
@@ -21,11 +21,11 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+    <aside className="flex h-full w-60 flex-col border-r border-base-300 bg-base-100 dark:border-dark-base-300 dark:bg-dark-base-100">
       {/* Logo */}
-      <div className="flex items-center gap-2 border-b border-gray-200 px-5 py-4 dark:border-gray-700">
-        <Clapperboard size={24} className="text-blue-600" />
-        <span className="text-lg font-bold text-gray-900 dark:text-white">
+      <div className="flex items-center gap-2 border-b border-base-300 px-5 py-4 dark:border-dark-base-300">
+        <img src={logoIcon} alt="SRT Translator" className="h-7 w-7 rounded" />
+        <span className="text-lg font-bold text-base-content dark:text-dark-base-content">
           SRT Translator
         </span>
       </div>
@@ -40,8 +40,8 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  ? "bg-primary/10 text-primary dark:bg-dark-primary/20 dark:text-dark-primary"
+                  : "text-base-content/70 hover:bg-base-200 dark:text-dark-base-content/50 dark:hover:bg-dark-base-200"
               }`
             }
           >

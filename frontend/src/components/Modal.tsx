@@ -30,21 +30,21 @@ export default function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* backdrop */}
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-neutral/40" onClick={onClose} />
       {/* dialog */}
-      <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800">
+      <div className="relative z-10 w-full max-w-md rounded-xl bg-base-100 p-6 shadow-xl dark:bg-dark-base-200">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="text-lg font-semibold text-base-content dark:text-dark-base-content">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700"
+            className="rounded p-1 text-base-content/50 hover:bg-base-200 hover:text-base-content/70 dark:hover:bg-dark-base-300"
           >
             <X size={18} />
           </button>
         </div>
-        <div className="text-sm text-gray-700 dark:text-gray-300">
+        <div className="text-sm text-base-content/80 dark:text-dark-base-content">
           {children}
         </div>
         {actions && (

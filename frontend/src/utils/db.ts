@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS: Settings = {
   replace_credits: true,
   add_credits: true,
   append_credits_at_end: false,
+  theme: "system",
 };
 
 function openDB(): Promise<IDBDatabase> {

@@ -22,16 +22,16 @@ export const useToast = () => useContext(ToastContext);
 let nextId = 0;
 
 const icons: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle size={18} className="text-green-500" />,
-  error: <AlertCircle size={18} className="text-red-500" />,
-  info: <Info size={18} className="text-blue-500" />,
+  success: <CheckCircle size={18} className="text-success" />,
+  error: <AlertCircle size={18} className="text-error" />,
+  info: <Info size={18} className="text-primary-500" />,
 };
 
 const bgColors: Record<ToastType, string> = {
   success:
-    "bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-800",
-  error: "bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-800",
-  info: "bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800",
+    "bg-success/10 border-success/30 dark:bg-dark-success/20 dark:border-dark-success/30",
+  error: "bg-error/10 border-error/30 dark:bg-dark-error/20 dark:border-dark-error/30",
+  info: "bg-primary-50 border-primary-200 dark:bg-primary-900/30 dark:border-primary-800",
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -59,12 +59,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             className={`flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg transition-all ${bgColors[t.type]}`}
           >
             {icons[t.type]}
-            <span className="text-sm text-gray-800 dark:text-gray-200">
+            <span className="text-sm text-base-content dark:text-dark-base-content">
               {t.message}
             </span>
             <button
               onClick={() => remove(t.id)}
-              className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="ml-2 text-base-content/50 hover:text-base-content/70 dark:hover:text-base-content/40"
             >
               <X size={14} />
             </button>

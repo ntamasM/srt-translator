@@ -90,13 +90,13 @@ export default function OldFilesPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-base-content dark:text-dark-base-content">
           Old Files
         </h1>
         <button
           onClick={refresh}
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+          className="flex items-center gap-2 rounded-lg border border-base-300 px-3 py-1.5 text-sm text-base-content/70 transition-colors hover:bg-base-200 dark:border-dark-base-300 dark:text-dark-base-content/50 dark:hover:bg-dark-base-200"
         >
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           Refresh
@@ -104,15 +104,15 @@ export default function OldFilesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-gray-700 dark:bg-gray-800">
+      <div className="flex gap-1 rounded-lg border border-base-300 bg-base-200 p-1 dark:border-dark-base-300 dark:bg-dark-base-200">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               tab === t.key
-                ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                ? "bg-base-100 text-base-content shadow-sm dark:bg-dark-base-300 dark:text-dark-base-content"
+                : "text-base-content/60 hover:text-base-content/80 dark:text-dark-base-content/50 dark:hover:text-dark-base-content"
             }`}
           >
             {t.icon}
@@ -120,8 +120,8 @@ export default function OldFilesPage() {
             <span
               className={`rounded-full px-2 py-0.5 text-xs ${
                 tab === t.key
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
-                  : "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300"
+                  : "bg-base-300 text-base-content/60 dark:bg-dark-base-300 dark:text-dark-base-content/50"
               }`}
             >
               {t.count}
@@ -131,19 +131,19 @@ export default function OldFilesPage() {
       </div>
 
       {/* Retention notice */}
-      <p className="text-xs text-gray-400 dark:text-gray-500">
+      <p className="text-xs text-base-content/50 dark:text-dark-base-content/50">
         Files older than 7 days are automatically deleted.
       </p>
 
       {/* File list */}
       {loading ? (
-        <div className="flex items-center justify-center py-12 text-gray-400">
+        <div className="flex items-center justify-center py-12 text-base-content/50">
           <RefreshCw size={20} className="animate-spin" />
           <span className="ml-2 text-sm">Loading…</span>
         </div>
       ) : files.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 py-12 text-center dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="rounded-lg border border-dashed border-base-300 py-12 text-center dark:border-dark-base-300">
+          <p className="text-sm text-base-content/60 dark:text-dark-base-content/50">
             {tab === "uploaded"
               ? "No uploaded files yet."
               : "No translated files yet."}
@@ -154,13 +154,13 @@ export default function OldFilesPage() {
           {files.map((f) => (
             <div
               key={f.name}
-              className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800"
+              className="flex items-center justify-between rounded-lg border border-base-300 bg-base-100 px-4 py-3 dark:border-dark-base-300 dark:bg-dark-base-200"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
+                <p className="truncate text-sm font-medium text-base-content dark:text-dark-base-content">
                   {f.name}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-base-content/60 dark:text-dark-base-content/50">
                   {formatFileSize(f.size)} ·{" "}
                   {new Date(f.modified).toLocaleString()}
                 </p>
@@ -172,10 +172,10 @@ export default function OldFilesPage() {
                     <span
                       className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                         days <= 1
-                          ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                          ? "bg-error/20 text-error dark:bg-dark-error/20 dark:text-dark-error"
                           : days <= 3
-                            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                            : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                            ? "bg-warning/20 text-warning-content dark:bg-dark-warning/20 dark:text-dark-warning"
+                            : "bg-base-200 text-base-content/60 dark:bg-dark-base-300 dark:text-dark-base-content/50"
                       }`}
                       title={`Deleted in ${days} day${days !== 1 ? "s" : ""}`}
                     >
@@ -187,7 +187,7 @@ export default function OldFilesPage() {
                 {tab === "translated" && (
                   <button
                     onClick={() => handleDownload(f.name)}
-                    className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                    className="rounded p-1.5 text-base-content/50 hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
                     title="Download"
                   >
                     <Download size={16} />
@@ -196,7 +196,7 @@ export default function OldFilesPage() {
                 {tab === "uploaded" && (
                   <button
                     onClick={() => handleDelete(f.name)}
-                    className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                    className="rounded p-1.5 text-base-content/50 hover:bg-error/10 hover:text-error dark:hover:bg-dark-error/10 dark:hover:text-error"
                     title="Delete"
                   >
                     <Trash2 size={16} />

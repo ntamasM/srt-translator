@@ -91,40 +91,40 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <h1 className="text-2xl font-bold text-base-content dark:text-dark-base-content">
         Translate Subtitles
       </h1>
 
       {/* Language selector */}
       {settings && (
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+          <div className="flex items-center gap-2 rounded-lg border border-base-300 bg-base-100 px-4 py-2 shadow-sm dark:border-dark-base-300 dark:bg-dark-base-200">
+            <span className="text-sm font-medium text-base-content/70 dark:text-dark-base-content">
               Source:
             </span>
             <input
               value={settings.src_lang}
               onChange={(e) => updateSettings({ src_lang: e.target.value })}
-              className="w-14 rounded border border-gray-300 px-2 py-1 text-center text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              className="w-14 rounded border border-base-300 px-2 py-1 text-center text-sm dark:border-dark-base-300 dark:bg-dark-base-300 dark:text-dark-base-content"
             />
           </div>
 
           <button
             onClick={handleSwapLanguages}
-            className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+            className="rounded-full p-2 text-base-content/50 hover:bg-base-200 hover:text-base-content/70 dark:hover:bg-dark-base-200"
             title="Swap languages"
           >
             <ArrowRightLeft size={18} />
           </button>
 
-          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+          <div className="flex items-center gap-2 rounded-lg border border-base-300 bg-base-100 px-4 py-2 shadow-sm dark:border-dark-base-300 dark:bg-dark-base-200">
+            <span className="text-sm font-medium text-base-content/70 dark:text-dark-base-content">
               Target:
             </span>
             <input
               value={settings.tgt_lang}
               onChange={(e) => updateSettings({ tgt_lang: e.target.value })}
-              className="w-14 rounded border border-gray-300 px-2 py-1 text-center text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              className="w-14 rounded border border-base-300 px-2 py-1 text-center text-sm dark:border-dark-base-300 dark:bg-dark-base-300 dark:text-dark-base-content"
             />
           </div>
         </div>
@@ -142,25 +142,25 @@ export default function HomePage() {
           {/* File list */}
           {files.length > 0 && (
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <h2 className="text-sm font-semibold text-base-content/80 dark:text-dark-base-content">
                 Files ({files.length})
               </h2>
               {files.map((f) => (
                 <div
                   key={f.name}
-                  className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800"
+                  className="flex items-center justify-between rounded-lg border border-base-300 bg-base-100 px-4 py-2 dark:border-dark-base-300 dark:bg-dark-base-200"
                 >
                   <div>
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                    <p className="text-sm font-medium text-base-content dark:text-dark-base-content">
                       {f.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-base-content/60">
                       {formatFileSize(f.size)}
                     </p>
                   </div>
                   <button
                     onClick={() => handleRemoveFile(f.name)}
-                    className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
+                    className="rounded p-1 text-base-content/50 hover:bg-error/10 hover:text-error dark:hover:bg-dark-error/10"
                   >
                     <X size={16} />
                   </button>
@@ -191,7 +191,7 @@ export default function HomePage() {
         status === "error") && (
         <div className="space-y-4">
           <div>
-            <h2 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <h2 className="mb-2 text-sm font-semibold text-base-content/80 dark:text-dark-base-content">
               {status === "complete"
                 ? "Translation Complete"
                 : status === "cancelled"
@@ -209,14 +209,14 @@ export default function HomePage() {
               variant="secondary"
               onClick={cancelTranslation}
               icon={<Square size={16} />}
-              className="w-full border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+              className="w-full border-error/50 text-error hover:bg-error/10 dark:border-dark-error/50 dark:text-error dark:hover:bg-dark-error/10"
             >
               Stop Translation
             </Button>
           )}
 
           {error && (
-            <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+            <p className="rounded-lg bg-error/10 p-3 text-sm text-error dark:bg-dark-error/10 dark:text-error">
               {error}
             </p>
           )}

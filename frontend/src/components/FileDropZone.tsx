@@ -61,20 +61,20 @@ export default function FileDropZone({
       onClick={handleClick}
       className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 transition-colors ${
         isDragging
-          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-          : "border-gray-300 bg-gray-50 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800/50 dark:hover:border-gray-500"
+          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+          : "border-base-300 bg-base-100 hover:border-base-300 dark:border-dark-base-300 dark:bg-dark-base-200/50 dark:hover:border-dark-base-300"
       }`}
     >
       <Upload
         size={40}
         className={`mb-3 ${
-          isDragging ? "text-blue-500" : "text-gray-400 dark:text-gray-500"
+          isDragging ? "text-primary-500" : "text-base-content/50 dark:text-dark-base-content/50"
         }`}
       />
-      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+      <p className="text-sm font-medium text-base-content/70 dark:text-dark-base-content">
         Drag &amp; drop .srt files here
       </p>
-      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
         or click to browse
       </p>
     </div>

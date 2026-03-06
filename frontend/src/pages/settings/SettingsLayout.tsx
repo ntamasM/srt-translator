@@ -10,12 +10,12 @@ const tabs = [
 export default function SettingsLayout() {
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
+      <h1 className="mb-4 text-2xl font-bold text-base-content dark:text-dark-base-content">
         Settings
       </h1>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+      <div className="mb-6 flex gap-1 rounded-lg bg-base-200 p-1 dark:bg-dark-base-200">
         {tabs.map((tab) => (
           <NavLink
             key={tab.to}
@@ -23,8 +23,8 @@ export default function SettingsLayout() {
             className={({ isActive }) =>
               `flex-1 rounded-md px-3 py-2 text-center text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-white text-blue-700 shadow dark:bg-gray-700 dark:text-blue-300"
-                  : "text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                  ? "bg-base-100 text-primary-700 shadow dark:bg-dark-base-300 dark:text-primary-300"
+                  : "text-base-content/70 hover:text-base-content dark:text-dark-base-content/50 dark:hover:text-dark-base-content"
               }`
             }
           >

@@ -1,3 +1,5 @@
+export type Theme = "light" | "dark" | "system";
+
 export interface Settings {
   ai_platform: string;
   api_key: string;
@@ -11,6 +13,7 @@ export interface Settings {
   replace_credits: boolean;
   add_credits: boolean;
   append_credits_at_end: boolean;
+  theme: Theme;
 }
 
 export interface MatchingWord {
