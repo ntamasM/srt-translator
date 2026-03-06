@@ -120,7 +120,7 @@ export default function OldFilesPage() {
             <span
               className={`rounded-full px-2 py-0.5 text-xs ${
                 tab === t.key
-                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300"
+                  ? "bg-primary/20 text-primary dark:bg-dark-primary/25 dark:text-dark-primary"
                   : "bg-base-300 text-base-content/60 dark:bg-dark-base-300 dark:text-dark-base-content/50"
               }`}
             >
@@ -187,7 +187,7 @@ export default function OldFilesPage() {
                 {tab === "translated" && (
                   <button
                     onClick={() => handleDownload(f.name)}
-                    className="rounded p-1.5 text-base-content/50 hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/20 dark:hover:text-primary-400"
+                    className="rounded p-1.5 text-base-content/50 hover:bg-primary/10 hover:text-primary dark:hover:bg-dark-primary/10 dark:hover:text-dark-primary"
                     title="Download"
                   >
                     <Download size={16} />

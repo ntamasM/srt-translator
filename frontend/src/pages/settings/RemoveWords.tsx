@@ -205,7 +205,7 @@ export default function RemoveWords() {
           onChange={(e) => setNewWord(e.target.value)}
           placeholder="Word or phrase to remove"
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-          className="flex-1 rounded-lg border border-base-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
+          className="flex-1 rounded-lg border border-base-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
         />
         <Button onClick={handleAdd} icon={<Plus size={16} />}>
           Add
@@ -229,14 +229,14 @@ export default function RemoveWords() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Filter…"
-          className="w-full rounded-lg border border-base-300 py-2 pl-9 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
+          className="w-full rounded-lg border border-base-300 py-2 pl-9 pr-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
         />
       </div>
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 dark:border-primary-800 dark:bg-primary-900/20">
-          <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
+        <div className="flex items-center gap-2 rounded-lg border border-accent bg-primary/10 px-3 py-2 dark:border-dark-primary dark:bg-dark-primary/10">
+          <span className="text-sm font-medium text-primary dark:text-dark-primary">
             {selected.size} selected
           </span>
           <div className="ml-auto flex gap-2">
@@ -303,9 +303,9 @@ export default function RemoveWords() {
             className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-base-content/60 hover:bg-base-100 dark:text-dark-base-content/50 dark:hover:bg-dark-base-200"
           >
             {selected.size === filtered.length ? (
-              <CheckSquare size={14} className="text-primary-600" />
+              <CheckSquare size={14} className="text-primary" />
             ) : selected.size > 0 ? (
-              <MinusSquare size={14} className="text-primary-600" />
+              <MinusSquare size={14} className="text-primary" />
             ) : (
               <Square size={14} />
             )}
@@ -320,13 +320,13 @@ export default function RemoveWords() {
               return (
                 <div
                   key={word}
-                  className="flex items-center gap-2 rounded-lg border border-primary-300 bg-primary-50 px-3 py-2 dark:border-primary-700 dark:bg-primary-900/20"
+                  className="flex items-center gap-2 rounded-lg border border-accent bg-primary/10 px-3 py-2 dark:border-dark-primary dark:bg-dark-primary/10"
                 >
                   <input
                     type="checkbox"
                     checked
                     onChange={() => toggleSelect(word)}
-                    className="h-4 w-4 rounded border-base-300 text-primary-600 focus:ring-primary-500"
+                    className="h-4 w-4 rounded border-base-300 text-primary focus:ring-primary"
                   />
                   <input
                     value={bulkEdits.get(word)!}
@@ -342,7 +342,7 @@ export default function RemoveWords() {
                 key={word}
                 className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
                   isSelected
-                    ? "border-primary-300 bg-primary-50 dark:border-primary-700 dark:bg-primary-900/10"
+                    ? "border-accent bg-primary/10 dark:border-dark-primary dark:bg-dark-primary/5"
                     : "border-base-300 bg-base-100 dark:border-dark-base-300 dark:bg-dark-base-200"
                 }`}
               >
@@ -351,7 +351,7 @@ export default function RemoveWords() {
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => toggleSelect(word)}
-                    className="h-4 w-4 rounded border-base-300 text-primary-600 focus:ring-primary-500"
+                    className="h-4 w-4 rounded border-base-300 text-primary focus:ring-primary"
                   />
                   <span className="text-base-content dark:text-dark-base-content">
                     {word}
@@ -401,7 +401,7 @@ export default function RemoveWords() {
             onChange={(e) => setBulkJson(e.target.value)}
             rows={8}
             placeholder='["damn", "freaking"]'
-            className="w-full rounded-lg border border-base-300 px-3 py-2 font-mono text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
+            className="w-full rounded-lg border border-base-300 px-3 py-2 font-mono text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-primary dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
           />
           <input
             ref={fileInputRef}

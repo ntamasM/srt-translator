@@ -31,7 +31,7 @@ export default function ProgressCard({
           {progress.status === "done" && onDownload && (
             <button
               onClick={onDownload}
-              className="rounded p-1 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30"
+              className="rounded p-1 text-primary hover:bg-primary/10 dark:hover:bg-dark-primary/15"
               title="Download"
             >
               <Download size={16} />

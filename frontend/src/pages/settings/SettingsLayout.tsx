@@ -23,7 +23,7 @@ export default function SettingsLayout() {
             className={({ isActive }) =>
               `flex-1 rounded-md px-3 py-2 text-center text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-base-100 text-primary-700 shadow dark:bg-dark-base-300 dark:text-primary-300"
+                  ? "bg-base-100 text-primary shadow dark:bg-dark-base-300 dark:text-dark-primary"
                   : "text-base-content/70 hover:text-base-content dark:text-dark-base-content/50 dark:hover:text-dark-base-content"
               }`
             }

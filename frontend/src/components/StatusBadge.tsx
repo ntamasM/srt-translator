@@ -15,7 +15,7 @@ const config: Record<Status, { label: string; classes: string }> = {
   translating: {
     label: "Translating",
     classes:
-      "bg-primary-100 text-primary-700 animate-pulse dark:bg-primary-900/40 dark:text-primary-300",
+      "bg-primary/20 text-primary animate-pulse dark:bg-dark-primary/20 dark:text-dark-primary",
   },
   done: {
     label: "Done",
@@ -24,7 +24,8 @@ const config: Record<Status, { label: string; classes: string }> = {
   },
   error: {
     label: "Error",
-    classes: "bg-error/20 text-error dark:bg-dark-error/20 dark:text-dark-error",
+    classes:
+      "bg-error/20 text-error dark:bg-dark-error/20 dark:text-dark-error",
   },
   cancelled: {
     label: "Cancelled",

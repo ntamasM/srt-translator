@@ -24,14 +24,15 @@ let nextId = 0;
 const icons: Record<ToastType, React.ReactNode> = {
   success: <CheckCircle size={18} className="text-success" />,
   error: <AlertCircle size={18} className="text-error" />,
-  info: <Info size={18} className="text-primary-500" />,
+  info: <Info size={18} className="text-primary" />,
 };
 
 const bgColors: Record<ToastType, string> = {
   success:
     "bg-success/10 border-success/30 dark:bg-dark-success/20 dark:border-dark-success/30",
-  error: "bg-error/10 border-error/30 dark:bg-dark-error/20 dark:border-dark-error/30",
-  info: "bg-primary-50 border-primary-200 dark:bg-primary-900/30 dark:border-primary-800",
+  error:
+    "bg-error/10 border-error/30 dark:bg-dark-error/20 dark:border-dark-error/30",
+  info: "bg-primary/10 border-accent dark:bg-dark-primary/15 dark:border-dark-primary",
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {

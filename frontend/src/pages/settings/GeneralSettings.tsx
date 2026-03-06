@@ -110,7 +110,7 @@ export default function GeneralSettings() {
             type={showKey ? "text" : "password"}
             value={form.api_key || ""}
             onChange={(e) => handleChange("api_key", e.target.value)}
-            className="flex-1 rounded-lg border border-base-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
+            className="flex-1 rounded-lg border border-base-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
             placeholder="sk-..."
           />
           <button
@@ -238,7 +238,7 @@ export default function GeneralSettings() {
               type="checkbox"
               checked={!!(form as any)[key]}
               onChange={(e) => handleChange(key, e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-base-300 text-primary-600 focus:ring-primary-500"
+              className="mt-0.5 h-4 w-4 rounded border-base-300 text-primary focus:ring-primary"
             />
             <div>
               <span>{label}</span>

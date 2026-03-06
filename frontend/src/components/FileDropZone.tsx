@@ -61,14 +61,16 @@ export default function FileDropZone({
       onClick={handleClick}
       className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 transition-colors ${
         isDragging
-          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+          ? "border-primary bg-primary/10 dark:bg-dark-primary/10"
           : "border-base-300 bg-base-100 hover:border-base-300 dark:border-dark-base-300 dark:bg-dark-base-200/50 dark:hover:border-dark-base-300"
       }`}
     >
       <Upload
         size={40}
         className={`mb-3 ${
-          isDragging ? "text-primary-500" : "text-base-content/50 dark:text-dark-base-content/50"
+          isDragging
+            ? "text-primary"
+            : "text-base-content/50 dark:text-dark-base-content/50"
         }`}
       />
       <p className="text-sm font-medium text-base-content/70 dark:text-dark-base-content">

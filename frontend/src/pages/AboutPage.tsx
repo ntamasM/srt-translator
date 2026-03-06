@@ -16,7 +16,7 @@ import logoIcon from "../../assets/icons/Srt-Translator--icon.svg";
 
 const features = [
   {
-    icon: <FileText size={32} className="text-primary-500" />,
+    icon: <FileText size={32} className="text-primary" />,
     title: "SRT File Support",
     description:
       "Upload and translate standard .srt subtitle files while preserving timestamps and formatting.",
@@ -117,7 +117,7 @@ export default function AboutPage() {
         <div className="space-y-6">
           {steps.map((step, index) => (
             <div key={index} className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-600 font-bold text-white">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-white">
                 {index + 1}
               </div>
               <div className="flex-1">
@@ -189,14 +189,14 @@ export default function AboutPage() {
           <div className="mb-8 text-center">
             {/* Avatar */}
             <div className="mb-6 inline-block">
-              <div className="mx-auto h-24 w-24 rounded-full bg-linear-to-br from-primary to-primary-800 p-1 shadow-lg dark:from-dark-primary dark:to-dark-accent">
+              <div className="mx-auto h-24 w-24 rounded-full bg-linear-to-br from-primary to-neutral p-1 shadow-lg dark:from-dark-primary dark:to-dark-accent">
                 <div className="flex h-full w-full items-center justify-center rounded-full bg-base-100 dark:bg-dark-base-100">
                   <span className="text-4xl">👨‍💻</span>
                 </div>
               </div>
             </div>
 
-            <h2 className="mb-3 bg-linear-to-r from-primary to-primary-800 bg-clip-text text-2xl font-bold text-transparent md:text-4xl dark:from-dark-primary dark:to-dark-accent">
+            <h2 className="mb-3 bg-linear-to-r from-primary to-neutral bg-clip-text text-2xl font-bold text-transparent md:text-4xl dark:from-dark-primary dark:to-dark-accent">
               Developer & Support
             </h2>
 
@@ -223,7 +223,7 @@ export default function AboutPage() {
               rel="noopener noreferrer"
               className="group relative w-full sm:w-auto"
             >
-              <div className="absolute -inset-0.5 rounded-lg bg-linear-to-r from-primary to-primary-800 opacity-40 blur transition duration-300 group-hover:opacity-70" />
+              <div className="absolute -inset-0.5 rounded-lg bg-linear-to-r from-primary to-neutral opacity-40 blur transition duration-300 group-hover:opacity-70" />
               <div className="relative flex items-center justify-center gap-2 rounded-lg bg-primary px-8 py-4 font-semibold text-white shadow-lg transition-transform duration-200 group-hover:scale-105">
                 <Globe size={20} />
                 Visit Portfolio
@@ -253,7 +253,7 @@ export default function AboutPage() {
           </div>
 
           <div className="border-t border-base-300 pt-6 text-center dark:border-dark-base-300">
-            <p className="animate-pulse bg-linear-to-r from-primary via-primary-800 to-error bg-clip-text text-lg font-medium text-transparent dark:from-dark-primary dark:via-dark-accent dark:to-dark-error">
+            <p className="animate-pulse bg-linear-to-r from-primary via-accent to-error bg-clip-text text-lg font-medium text-transparent dark:from-dark-primary dark:via-dark-accent dark:to-dark-error">
               Thank you for using SRT Translator! ✨
             </p>
           </div>

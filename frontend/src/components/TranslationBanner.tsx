@@ -34,9 +34,9 @@ export default function TranslationBanner() {
   > = {
     translating: {
       icon: <Loader2 size={16} className="animate-spin" />,
-      bg: "bg-primary-50 border-primary-200 dark:bg-primary-900/30 dark:border-primary-700",
-      bar: "bg-primary-500",
-      text: "text-primary-700 dark:text-primary-300",
+      bg: "bg-primary/10 border-accent dark:bg-dark-primary/15 dark:border-dark-primary",
+      bar: "bg-primary",
+      text: "text-primary dark:text-dark-primary",
       label: `Translating… ${pct}% (${completedFiles.length}/${totalFiles} files)`,
     },
     complete: {
@@ -74,7 +74,7 @@ export default function TranslationBanner() {
 
       {/* Mini progress bar */}
       {status === "translating" && (
-        <div className="ml-auto h-1.5 w-32 overflow-hidden rounded-full bg-primary-200 dark:bg-primary-800">
+        <div className="ml-auto h-1.5 w-32 overflow-hidden rounded-full bg-accent dark:bg-dark-primary/30">
           <div
             className={`h-full rounded-full transition-all duration-300 ${c.bar}`}
             style={{ width: `${pct}%` }}
