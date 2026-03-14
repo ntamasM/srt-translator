@@ -13,8 +13,12 @@ from core.translate import SRTTranslator
 SUBTITLES_DIR = DATA_DIR / "subtitles"
 TRANSLATED_DIR = DATA_DIR / "translated"
 
-# Default number of parallel subtitle translations
+# Default parallelism and chunking for subtitle translation
 DEFAULT_CONCURRENCY = 4
+DEFAULT_CHUNK_SIZE = 24
+MAX_CHUNK_SIZE = 96
+DEFAULT_CHUNK_RETRIES = 2
+DEFAULT_CHUNK_TIMEOUT = 240
 
 # In-memory job store
 _jobs: dict[str, dict[str, Any]] = {}
@@ -206,7 +210,7 @@ async def _translate_file_parallel(
     progress_callback: Optional[Callable],
     cancel_event: asyncio.Event,
 ) -> None:
-    """Translate a single file using parallel subtitle processing with progress & cancel."""
+    """Translate a single file using chunked subtitle processing with progress & cancel."""
 
     # Parse the SRT file
     subtitles = await asyncio.to_thread(
@@ -220,8 +224,27 @@ async def _translate_file_parallel(
             "type": "progress", "file": filename, "current": 0, "total": total,
         })
 
-    # -- Parallel translation with semaphore for concurrency control --
-    sem = asyncio.Semaphore(DEFAULT_CONCURRENCY)
+    settings = job.get("settings", {})
+    chunk_size_raw = settings.get("chunk_size", DEFAULT_CHUNK_SIZE)
+    chunk_size = max(1, min(MAX_CHUNK_SIZE, int(chunk_size_raw)))
+    max_chunk_retries = max(0, int(settings.get("max_chunk_retries", DEFAULT_CHUNK_RETRIES)))
+    enable_quality_check = bool(settings.get("enable_quality_check", True))
+    chunk_timeout = int(settings.get("chunk_timeout_seconds", DEFAULT_CHUNK_TIMEOUT))
+
+    chunks = [
+        (start, subtitles[start: start + chunk_size])
+        for start in range(0, total, chunk_size)
+    ]
+
+    configured_max_concurrency = settings.get("max_concurrency")
+    if configured_max_concurrency is None:
+        # Adaptive worker count based on workload: fewer workers for tiny files,
+        # more workers for larger files while staying conservative for API limits.
+        max_workers = max(1, min(DEFAULT_CONCURRENCY, len(chunks), max(1, total // 40 + 1)))
+    else:
+        max_workers = max(1, min(int(configured_max_concurrency), len(chunks)))
+
+    sem = asyncio.Semaphore(max_workers)
     progress_lock = asyncio.Lock()
     current_done = {"value": 0}
 
@@ -229,7 +252,39 @@ async def _translate_file_parallel(
     translated: list[Any] = [None] * total
     error_count = {"value": 0}
 
-    async def _translate_one(idx: int, sub):
+    def _is_transient_error(exc: Exception) -> bool:
+        msg = str(exc).lower()
+        transient_signals = (
+            "timeout", "timed out", "rate limit", "429", "503", "overloaded",
+            "temporarily", "connection", "network", "reset by peer",
+        )
+        return any(sig in msg for sig in transient_signals)
+
+    async def _translate_chunk_with_retry(chunk_subs):
+        delay = 1.0
+        for attempt in range(max_chunk_retries + 1):
+            if cancel_event.is_set():
+                raise CancelledError()
+
+            try:
+                return await asyncio.wait_for(
+                    asyncio.to_thread(
+                        translator.translate_subtitles_batch,
+                        chunk_subs,
+                        src_lang,
+                        tgt_lang,
+                        enable_quality_check,
+                    ),
+                    timeout=chunk_timeout,
+                )
+            except Exception as e:
+                is_last = attempt >= max_chunk_retries
+                if is_last or not _is_transient_error(e):
+                    raise
+                await asyncio.sleep(delay)
+                delay = min(delay * 2.0, 8.0)
+
+    async def _translate_one(chunk_idx: int, start: int, chunk_subs):
         # Check cancellation before starting
         if cancel_event.is_set():
             raise CancelledError()
@@ -240,48 +295,80 @@ async def _translate_file_parallel(
                 raise CancelledError()
 
             try:
-                result = await asyncio.wait_for(
-                    asyncio.to_thread(
-                        translator.translate_subtitle, sub, src_lang, tgt_lang
-                    ),
-                    timeout=120,
-                )
-            except asyncio.TimeoutError as e:
-                # Treat timeout same as other errors — keep original text
-                import srt as _srt
-                result = _srt.Subtitle(
-                    index=sub.index, start=sub.start, end=sub.end, content=sub.content
-                )
-                async with progress_lock:
-                    error_count["value"] += 1
+                chunk_result = await _translate_chunk_with_retry(chunk_subs)
+            except Exception as chunk_error:
+                # Fallback: keep robustness by attempting per-subtitle translation.
+                chunk_result = []
+                for sub in chunk_subs:
+                    if cancel_event.is_set():
+                        raise CancelledError()
+                    try:
+                        single = await asyncio.wait_for(
+                            asyncio.to_thread(
+                                translator.translate_subtitles_batch,
+                                [sub],
+                                src_lang,
+                                tgt_lang,
+                                False,
+                            ),
+                            timeout=max(90, chunk_timeout // 2),
+                        )
+                        chunk_result.extend(single)
+                    except Exception as e:
+                        import srt as _srt
+
+                        chunk_result.append(
+                            _srt.Subtitle(
+                                index=sub.index,
+                                start=sub.start,
+                                end=sub.end,
+                                content=sub.content,
+                            )
+                        )
+                        async with progress_lock:
+                            error_count["value"] += 1
+                        if progress_callback:
+                            await progress_callback({
+                                "type": "subtitle_error",
+                                "file": filename,
+                                "subtitle": sub.index,
+                                "message": f"{e}",
+                            })
+
                 if progress_callback:
                     await progress_callback({
-                        "type": "subtitle_error",
+                        "type": "warning",
                         "file": filename,
-                        "subtitle": sub.index,
-                        "message": f"Subtitle {sub.index} timed out, kept original text",
-                    })
-            except Exception as e:
-                # Keep the original subtitle as fallback but report the error
-                import srt as _srt
-                result = _srt.Subtitle(
-                    index=sub.index, start=sub.start, end=sub.end, content=sub.content
-                )
-                async with progress_lock:
-                    error_count["value"] += 1
-                if progress_callback:
-                    await progress_callback({
-                        "type": "subtitle_error",
-                        "file": filename,
-                        "subtitle": sub.index,
-                        "message": str(e),
+                        "message": (
+                            f"Chunk {chunk_idx + 1}/{len(chunks)} failed ({chunk_error}); "
+                            "used per-subtitle fallback"
+                        ),
                     })
 
-            translated[idx] = result
+            if len(chunk_result) != len(chunk_subs):
+                # Safety net: preserve structure if a provider returns malformed output.
+                import srt as _srt
+
+                repaired = []
+                for sub in chunk_subs:
+                    repaired.append(
+                        _srt.Subtitle(
+                            index=sub.index,
+                            start=sub.start,
+                            end=sub.end,
+                            content=sub.content,
+                        )
+                    )
+                chunk_result = repaired
+                async with progress_lock:
+                    error_count["value"] += len(chunk_subs)
+
+            for i, result in enumerate(chunk_result):
+                translated[start + i] = result
 
             # Update progress
             async with progress_lock:
-                current_done["value"] += 1
+                current_done["value"] += len(chunk_subs)
                 current = current_done["value"]
 
             job["progress"][filename]["current"] = current
@@ -293,10 +380,10 @@ async def _translate_file_parallel(
                     "total": total,
                 })
 
-    # Launch all subtitle tasks
+    # Launch all chunk tasks
     tasks = [
-        asyncio.create_task(_translate_one(i, sub))
-        for i, sub in enumerate(subtitles)
+        asyncio.create_task(_translate_one(i, start, chunk_subs))
+        for i, (start, chunk_subs) in enumerate(chunks)
     ]
 
     try:

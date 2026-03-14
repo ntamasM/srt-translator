@@ -6,11 +6,13 @@ import {
   Upload,
   Languages,
   Clock,
+  Eye,
 } from "lucide-react";
 import { filesApi } from "../api/filesApi";
 import { useToast } from "../components/Toast";
 import { formatFileSize } from "../utils/helpers";
 import type { FileInfo } from "../types/files";
+import Modal from "../components/Modal";
 
 type Tab = "uploaded" | "translated";
 
@@ -29,6 +31,10 @@ export default function OldFilesPage() {
   const [uploaded, setUploaded] = useState<FileInfo[]>([]);
   const [translated, setTranslated] = useState<FileInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewFilename, setPreviewFilename] = useState("");
+  const [previewText, setPreviewText] = useState("");
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const { addToast } = useToast();
 
   const refresh = async () => {
@@ -63,6 +69,21 @@ export default function OldFilesPage() {
 
   const handleDownload = (filename: string) => {
     filesApi.downloadFile(filename);
+  };
+
+  const handlePreview = async (filename: string) => {
+    setPreviewFilename(filename);
+    setPreviewOpen(true);
+    setIsPreviewLoading(true);
+    try {
+      const text = await filesApi.getTranslatedFileText(filename);
+      setPreviewText(text);
+    } catch (err: any) {
+      setPreviewText("");
+      addToast("error", err.message || "Failed to open preview");
+    } finally {
+      setIsPreviewLoading(false);
+    }
   };
 
   const files = tab === "uploaded" ? uploaded : translated;
@@ -185,18 +206,27 @@ export default function OldFilesPage() {
                   );
                 })()}
                 {tab === "translated" && (
-                  <button
-                    onClick={() => handleDownload(f.name)}
-                    className="rounded p-1.5 text-base-content/50 hover:bg-primary/10 hover:text-primary dark:hover:bg-dark-primary/10 dark:hover:text-dark-primary"
-                    title="Download"
-                  >
-                    <Download size={16} />
-                  </button>
+                  <>
+                    <button
+                      onClick={() => handlePreview(f.name)}
+                      className="rounded p-1.5 text-base-content/70 hover:bg-base-200 hover:text-base-content dark:text-dark-base-content/70 dark:hover:bg-dark-base-300 dark:hover:text-dark-base-content"
+                      title="Preview"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDownload(f.name)}
+                      className="rounded p-1.5 text-base-content/70 hover:bg-primary/10 hover:text-primary dark:text-dark-base-content/70 dark:hover:bg-dark-primary/10 dark:hover:text-dark-primary"
+                      title="Download"
+                    >
+                      <Download size={16} />
+                    </button>
+                  </>
                 )}
                 {tab === "uploaded" && (
                   <button
                     onClick={() => handleDelete(f.name)}
-                    className="rounded p-1.5 text-base-content/50 hover:bg-error/10 hover:text-error dark:hover:bg-dark-error/10 dark:hover:text-error"
+                    className="rounded p-1.5 text-base-content/70 hover:bg-error/10 hover:text-error dark:text-dark-base-content/70 dark:hover:bg-dark-error/10 dark:hover:text-error"
                     title="Delete"
                   >
                     <Trash2 size={16} />
@@ -207,6 +237,20 @@ export default function OldFilesPage() {
           ))}
         </div>
       )}
+
+      <Modal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title={previewFilename ? `Preview: ${previewFilename}` : "Preview"}
+      >
+        {isPreviewLoading ? (
+          <p>Loading preview...</p>
+        ) : (
+          <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-lg bg-base-200 p-3 text-xs dark:bg-dark-base-300">
+            {previewText || "No preview content available."}
+          </pre>
+        )}
+      </Modal>
     </div>
   );
 }

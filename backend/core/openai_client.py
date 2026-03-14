@@ -1,6 +1,7 @@
 """OpenAI client wrapper for structured SRT translation."""
 
 import json
+import random
 import time
 from typing import Dict, List, Optional, Any
 
@@ -47,6 +48,29 @@ class OpenAITranslationClient:
             "required": ["lines_translated"],
             "additionalProperties": False
         }
+
+    @staticmethod
+    def _is_retryable_error(exc: Exception) -> bool:
+        msg = str(exc).lower()
+        retry_tokens = (
+            "timeout", "timed out", "rate limit", "429", "500", "502", "503", "504",
+            "temporarily", "overloaded", "connection", "network",
+        )
+        return any(token in msg for token in retry_tokens)
+
+    def _create_completion_with_backoff(self, **kwargs):
+        delay = 1.0
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            try:
+                return self.client.chat.completions.create(**kwargs)
+            except Exception as e:
+                is_last = attempt == max_attempts - 1
+                if is_last or not self._is_retryable_error(e):
+                    raise
+                # Add jitter to avoid synchronized retries under shared rate limits.
+                time.sleep(delay + random.uniform(0.0, 0.4))
+                delay = min(delay * 2.0, 8.0)
     
     def translate_lines(self, lines: List[str], src_lang: str, tgt_lang: str, 
                        max_retries: int = 3) -> List[str]:
@@ -90,7 +114,7 @@ class OpenAITranslationClient:
         """Translate all lines in a single API call."""
         prompt = self._build_prompt(lines, src_lang, tgt_lang)
         
-        response = self.client.chat.completions.create(
+        response = self._create_completion_with_backoff(
             model=self.model,
             messages=[
                 {
@@ -132,7 +156,7 @@ class OpenAITranslationClient:
         indexed_lines = [f"[{i+1}] {line}" for i, line in enumerate(lines)]
         prompt = self._build_prompt(indexed_lines, src_lang, tgt_lang)
         
-        response = self.client.chat.completions.create(
+        response = self._create_completion_with_backoff(
             model=self.model,
             messages=[
                 {
@@ -207,7 +231,7 @@ class OpenAITranslationClient:
         """Translate a single line."""
         prompt = self._build_prompt([line], src_lang, tgt_lang)
         
-        response = self.client.chat.completions.create(
+        response = self._create_completion_with_backoff(
             model=self.model,
             messages=[
                 {

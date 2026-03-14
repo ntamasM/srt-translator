@@ -1,6 +1,7 @@
 """Anthropic Claude client wrapper for structured SRT translation."""
 
 import json
+import random
 import time
 from typing import Dict, List, Optional, Any
 
@@ -51,14 +52,39 @@ class ClaudeTranslationClient:
 
     def _call(self, system: str, user: str) -> str:
         """Make a Claude API call and return the text content."""
-        message = self.client.messages.create(
-            model=self.model,
-            max_tokens=8192,
-            temperature=self.temperature,
-            top_p=self.top_p,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-        )
+        delay = 1.0
+        max_attempts = 3
+        message = None
+
+        for attempt in range(max_attempts):
+            try:
+                message = self.client.messages.create(
+                    model=self.model,
+                    max_tokens=8192,
+                    temperature=self.temperature,
+                    top_p=self.top_p,
+                    system=system,
+                    messages=[{"role": "user", "content": user}],
+                )
+                break
+            except Exception as e:
+                msg = str(e).lower()
+                retryable = any(
+                    token in msg
+                    for token in (
+                        "timeout", "timed out", "rate limit", "429", "500", "502", "503", "504",
+                        "temporarily", "overloaded", "connection", "network",
+                    )
+                )
+                is_last = attempt == max_attempts - 1
+                if is_last or not retryable:
+                    raise
+                time.sleep(delay + random.uniform(0.0, 0.4))
+                delay = min(delay * 2.0, 8.0)
+
+        if message is None:
+            raise ValueError("No response from Claude")
+
         # Claude returns a list of content blocks; take the first text block
         for block in message.content:
             if block.type == "text":

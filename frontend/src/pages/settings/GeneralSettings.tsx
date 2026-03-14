@@ -116,7 +116,7 @@ export default function GeneralSettings() {
           <button
             type="button"
             onClick={() => setShowKey(!showKey)}
-            className="rounded-lg border border-base-300 px-3 py-2 text-base-content/60 hover:bg-base-100 dark:border-dark-base-300 dark:hover:bg-dark-base-200"
+            className="rounded-lg border border-base-300 px-3 py-2 text-base-content/60 hover:bg-base-100 dark:border-dark-base-300 dark:hover:bg-dark-base-200 dark:text-dark-base-content/50"
           >
             {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>

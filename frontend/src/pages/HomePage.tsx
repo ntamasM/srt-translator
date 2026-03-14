@@ -1,9 +1,17 @@
-import React, { useEffect } from "react";
-import { ArrowRightLeft, Play, RotateCcw, X, Square } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRightLeft,
+  Play,
+  RotateCcw,
+  X,
+  Square,
+  Download,
+} from "lucide-react";
 import Button from "../components/Button";
 import FileDropZone from "../components/FileDropZone";
 import ProgressBar from "../components/ProgressBar";
 import ProgressCard from "../components/ProgressCard";
+import Modal from "../components/Modal";
 import { useTranslationContext } from "../contexts/TranslationContext";
 import { useSettings } from "../hooks/useSettings";
 import { useToast } from "../components/Toast";
@@ -30,6 +38,10 @@ export default function HomePage() {
     reset,
   } = useTranslationContext();
   const { addToast } = useToast();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewFilename, setPreviewFilename] = useState("");
+  const [previewText, setPreviewText] = useState("");
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   useEffect(() => {
     refreshFiles();
@@ -88,6 +100,35 @@ export default function HomePage() {
   const overallPct = overallProgress(progressList);
 
   const canStart = files.length > 0 && status === "idle" && settings?.api_key;
+  const doneFiles = useMemo(
+    () =>
+      progressList
+        .filter((fp) => fp.status === "done")
+        .map((fp) => fp.filename),
+    [progressList],
+  );
+  const allTranslationsCompleted =
+    progressList.length > 0 && progressList.every((fp) => fp.status === "done");
+
+  const handlePreview = async (filename: string) => {
+    setPreviewFilename(filename);
+    setPreviewOpen(true);
+    setIsPreviewLoading(true);
+    try {
+      const text = await filesApi.getTranslatedFileText(filename);
+      setPreviewText(text);
+    } catch (err: any) {
+      setPreviewText("");
+      addToast("error", err.message || "Failed to open preview");
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
+  const handleDownloadAll = () => {
+    if (!allTranslationsCompleted) return;
+    filesApi.downloadAllFiles(doneFiles);
+  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -226,6 +267,11 @@ export default function HomePage() {
               <ProgressCard
                 key={fp.filename}
                 progress={fp}
+                onPreview={
+                  fp.status === "done"
+                    ? () => handlePreview(fp.filename)
+                    : undefined
+                }
                 onDownload={
                   fp.status === "done"
                     ? () => filesApi.downloadFile(fp.filename)
@@ -234,6 +280,16 @@ export default function HomePage() {
               />
             ))}
           </div>
+
+          <Button
+            variant="secondary"
+            onClick={handleDownloadAll}
+            disabled={!allTranslationsCompleted}
+            icon={<Download size={16} />}
+            className="w-full"
+          >
+            Download All
+          </Button>
 
           {(status === "complete" ||
             status === "error" ||
@@ -249,6 +305,20 @@ export default function HomePage() {
           )}
         </div>
       )}
+
+      <Modal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title={previewFilename ? `Preview: ${previewFilename}` : "Preview"}
+      >
+        {isPreviewLoading ? (
+          <p>Loading preview...</p>
+        ) : (
+          <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-lg bg-base-200 p-3 text-xs dark:bg-dark-base-300">
+            {previewText || "No preview content available."}
+          </pre>
+        )}
+      </Modal>
     </div>
   );
 }

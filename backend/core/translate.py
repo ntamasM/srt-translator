@@ -1,6 +1,8 @@
 """Main translation logic for SRT files."""
 
 import os
+import hashlib
+import threading
 import srt
 from pathlib import Path
 from typing import List, Optional
@@ -44,6 +46,8 @@ class SRTTranslator:
             temperature=temperature,
             top_p=top_p,
         )
+        self.model = model
+        self.ai_platform = ai_platform
         
         # Load matching terms and replacement mapping
         matching_terms = []
@@ -59,6 +63,8 @@ class SRTTranslator:
         self.word_remover = WordRemover(removal_file)
         self.replace_credits = replace_credits
         self.translator_name = translator_name
+        self._line_cache: dict[str, str] = {}
+        self._cache_lock = threading.Lock()
     
     @staticmethod
     def parse_srt_file(input_path: str) -> List[srt.Subtitle]:
@@ -236,50 +242,123 @@ class SRTTranslator:
         Returns:
             Translated subtitle with same timing and index
         """
-        # Split content into lines
-        original_lines = subtitle.content.split('\n')
-        
-        # Process credits first
-        processed_lines = self.credits_detector.process_subtitle_lines(
-            original_lines, self.replace_credits
-        )
-        
-        # Apply word removal
-        processed_lines = self.word_remover.process_subtitle_lines(processed_lines)
-        
-        # Protect content and translate
-        protected_lines = []
-        all_replacements = {}
-        
-        for line in processed_lines:
-            protected_line, replacements = self.placeholder_manager.protect_text(line)
-            protected_lines.append(protected_line)
-            all_replacements.update(replacements)
-        
-        # Translate the protected lines (let errors propagate to caller)
-        translated_lines = self.client.translate_lines(
+        return self.translate_subtitles_batch([subtitle], src_lang, tgt_lang)[0]
+
+    def _cache_key(self, line: str, src_lang: str, tgt_lang: str) -> str:
+        payload = f"{self.ai_platform}|{self.model}|{src_lang}|{tgt_lang}|{line}".encode("utf-8")
+        return hashlib.sha1(payload).hexdigest()
+
+    def _translate_lines_with_cache(self, lines: List[str], src_lang: str, tgt_lang: str) -> List[str]:
+        """Translate lines using a cache for exact line matches.
+
+        Cached values are reused immediately. Cache misses are translated in one
+        batch request and then stored.
+        """
+        if not lines:
+            return []
+
+        keys = [self._cache_key(line, src_lang, tgt_lang) for line in lines]
+        translated: List[Optional[str]] = [None] * len(lines)
+        missing_indices: List[int] = []
+
+        with self._cache_lock:
+            for i, key in enumerate(keys):
+                cached = self._line_cache.get(key)
+                if cached is None:
+                    missing_indices.append(i)
+                else:
+                    translated[i] = cached
+
+        if missing_indices:
+            misses = [lines[i] for i in missing_indices]
+            translated_misses = self.client.translate_lines(misses, src_lang, tgt_lang)
+            if len(translated_misses) != len(misses):
+                raise ValueError(
+                    f"Line count mismatch for cache-miss batch: expected {len(misses)}, got {len(translated_misses)}"
+                )
+            with self._cache_lock:
+                for i, line_translated in zip(missing_indices, translated_misses):
+                    translated[i] = line_translated
+                    self._line_cache[keys[i]] = line_translated
+
+        return [line if line is not None else lines[i] for i, line in enumerate(translated)]
+
+    def _has_placeholder_leak(self, lines: List[str]) -> bool:
+        for line in lines:
+            if "MATCHINGTERM_" in line or "HTMLTAG_" in line or "HTMLENTITY_" in line:
+                return True
+        return False
+
+    def translate_subtitles_batch(
+        self,
+        subtitles: List[srt.Subtitle],
+        src_lang: str,
+        tgt_lang: str,
+        strict_quality_check: bool = True,
+    ) -> List[srt.Subtitle]:
+        """Translate a contiguous subtitle batch for better context and speed."""
+        if not subtitles:
+            return []
+
+        protected_lines: List[str] = []
+        line_replacements: List[dict[str, str]] = []
+        lines_per_subtitle: List[int] = []
+        placeholder_counter = 0
+
+        for subtitle in subtitles:
+            original_lines = subtitle.content.split('\n')
+            processed_lines = self.credits_detector.process_subtitle_lines(
+                original_lines, self.replace_credits
+            )
+            processed_lines = self.word_remover.process_subtitle_lines(processed_lines)
+
+            local_count = 0
+            for line in processed_lines:
+                protected_line, replacements, placeholder_counter = (
+                    self.placeholder_manager.protect_text_with_counter(
+                        line, start_counter=placeholder_counter
+                    )
+                )
+                protected_lines.append(protected_line)
+                line_replacements.append(replacements)
+                local_count += 1
+
+            lines_per_subtitle.append(local_count)
+
+        translated_lines = self._translate_lines_with_cache(
             protected_lines, src_lang, tgt_lang
         )
-        
-        # Restore protected content
-        restored_lines = []
-        for line in translated_lines:
-            restored_line = self.placeholder_manager.restore_text(line, all_replacements)
-            restored_lines.append(restored_line)
-        
-        # Apply word replacements from matching file
-        final_lines = []
-        for line in restored_lines:
-            replaced_line = self.placeholder_manager.apply_replacements(line)
+
+        if len(translated_lines) != len(protected_lines):
+            raise ValueError(
+                f"Batch translation length mismatch: expected {len(protected_lines)}, got {len(translated_lines)}"
+            )
+
+        # Restore placeholders and apply glossary replacements line-by-line.
+        final_lines: List[str] = []
+        for line, replacements in zip(translated_lines, line_replacements):
+            restored_line = self.placeholder_manager.restore_text(line, replacements)
+            replaced_line = self.placeholder_manager.apply_replacements(restored_line)
             final_lines.append(replaced_line)
-        
-        # Create new subtitle with translated content
-        return srt.Subtitle(
-            index=subtitle.index,
-            start=subtitle.start,
-            end=subtitle.end,
-            content='\n'.join(final_lines)
-        )
+
+        if strict_quality_check and self._has_placeholder_leak(final_lines):
+            raise ValueError("Placeholder leakage detected after translation")
+
+        translated_subtitles: List[srt.Subtitle] = []
+        cursor = 0
+        for subtitle, line_count in zip(subtitles, lines_per_subtitle):
+            content_lines = final_lines[cursor: cursor + line_count]
+            cursor += line_count
+            translated_subtitles.append(
+                srt.Subtitle(
+                    index=subtitle.index,
+                    start=subtitle.start,
+                    end=subtitle.end,
+                    content='\n'.join(content_lines),
+                )
+            )
+
+        return translated_subtitles
     
     def _create_watermark_cue(self, existing_subtitles: List[srt.Subtitle]) -> srt.Subtitle:
         """Create a watermark cue to append at the end.

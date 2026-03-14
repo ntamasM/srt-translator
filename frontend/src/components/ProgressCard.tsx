@@ -2,15 +2,17 @@ import React from "react";
 import ProgressBar from "./ProgressBar";
 import StatusBadge from "./StatusBadge";
 import type { FileProgress } from "../types/translation";
-import { Download } from "lucide-react";
+import { Download, Eye } from "lucide-react";
 
 interface ProgressCardProps {
   progress: FileProgress;
+  onPreview?: () => void;
   onDownload?: () => void;
 }
 
 export default function ProgressCard({
   progress,
+  onPreview,
   onDownload,
 }: ProgressCardProps) {
   const pct =
@@ -28,6 +30,15 @@ export default function ProgressCard({
         </span>
         <div className="flex items-center gap-2">
           <StatusBadge status={progress.status} />
+          {progress.status === "done" && onPreview && (
+            <button
+              onClick={onPreview}
+              className="rounded p-1 text-base-content/70 hover:bg-base-200 dark:text-dark-base-content dark:hover:bg-dark-base-300"
+              title="Preview"
+            >
+              <Eye size={16} />
+            </button>
+          )}
           {progress.status === "done" && onDownload && (
             <button
               onClick={onDownload}

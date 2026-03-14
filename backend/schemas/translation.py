@@ -22,6 +22,11 @@ class TranslationSettings(BaseModel):
     replace_credits: bool = True
     add_credits: bool = True
     append_credits_at_end: bool = False
+    chunk_size: int = 24
+    max_concurrency: int = 4
+    max_chunk_retries: int = 2
+    chunk_timeout_seconds: int = 240
+    enable_quality_check: bool = True
 
 
 class TranslationRequest(BaseModel):
