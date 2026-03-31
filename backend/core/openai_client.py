@@ -3,7 +3,7 @@
 import json
 import random
 import time
-from typing import Dict, List, Optional, Any
+from typing import Callable, Dict, List, Optional, Any
 
 import openai
 from openai import OpenAI
@@ -35,8 +35,12 @@ class OpenAITranslationClient:
         self.model = model
         self.temperature = temperature
         self.top_p = top_p
-        
-        # JSON schema for structured output
+
+        # Use simple json_object format for non-OpenAI providers (e.g. DeepSeek)
+        # as they don't support json_schema structured outputs.
+        self._use_json_schema = base_url is None
+
+        # JSON schema for structured output (OpenAI only)
         self.response_schema = {
             "type": "object",
             "properties": {
@@ -49,6 +53,18 @@ class OpenAITranslationClient:
             "additionalProperties": False
         }
 
+    def _get_response_format(self) -> dict:
+        """Return the appropriate response_format for the provider."""
+        if self._use_json_schema:
+            return {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "translation_response",
+                    "schema": self.response_schema
+                }
+            }
+        return {"type": "json_object"}
+
     @staticmethod
     def _is_retryable_error(exc: Exception) -> bool:
         msg = str(exc).lower()
@@ -58,63 +74,79 @@ class OpenAITranslationClient:
         )
         return any(token in msg for token in retry_tokens)
 
-    def _create_completion_with_backoff(self, **kwargs):
+    def _create_completion_with_backoff(self, cancel_check: Optional[Callable[[], bool]] = None, **kwargs):
         delay = 1.0
         max_attempts = 3
         for attempt in range(max_attempts):
+            if cancel_check and cancel_check():
+                raise InterruptedError("Translation cancelled")
             try:
                 return self.client.chat.completions.create(**kwargs)
             except Exception as e:
                 is_last = attempt == max_attempts - 1
                 if is_last or not self._is_retryable_error(e):
                     raise
+                if cancel_check and cancel_check():
+                    raise InterruptedError("Translation cancelled")
                 # Add jitter to avoid synchronized retries under shared rate limits.
                 time.sleep(delay + random.uniform(0.0, 0.4))
                 delay = min(delay * 2.0, 8.0)
     
-    def translate_lines(self, lines: List[str], src_lang: str, tgt_lang: str, 
-                       max_retries: int = 3) -> List[str]:
+    def translate_lines(self, lines: List[str], src_lang: str, tgt_lang: str,
+                       max_retries: int = 3,
+                       cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
         """Translate a list of text lines while preserving structure.
-        
+
         Args:
             lines: List of text lines to translate
             src_lang: Source language code
             tgt_lang: Target language code
             max_retries: Maximum number of retry attempts
-            
+            cancel_check: Optional callable that returns True when cancelled
+
         Returns:
             List of translated lines (same length as input)
-            
+
         Raises:
             Exception: If translation fails after all retries
         """
         if not lines or all(not line.strip() for line in lines):
             return lines
-        
+
         # First attempt: translate all lines together
         try:
-            result = self._translate_batch(lines, src_lang, tgt_lang)
+            if cancel_check and cancel_check():
+                raise InterruptedError("Translation cancelled")
+            result = self._translate_batch(lines, src_lang, tgt_lang, cancel_check)
             if len(result) == len(lines):
                 return result
+        except InterruptedError:
+            raise
         except Exception as e:
             print(f"Batch translation failed: {e}")
-        
+
         # Second attempt: translate with explicit indexing
         try:
-            result = self._translate_indexed(lines, src_lang, tgt_lang)
+            if cancel_check and cancel_check():
+                raise InterruptedError("Translation cancelled")
+            result = self._translate_indexed(lines, src_lang, tgt_lang, cancel_check)
             if len(result) == len(lines):
                 return result
+        except InterruptedError:
+            raise
         except Exception as e:
             print(f"Indexed translation failed: {e}")
-        
+
         # Fallback: translate line by line
-        return self._translate_line_by_line(lines, src_lang, tgt_lang, max_retries)
+        return self._translate_line_by_line(lines, src_lang, tgt_lang, max_retries, cancel_check)
     
-    def _translate_batch(self, lines: List[str], src_lang: str, tgt_lang: str) -> List[str]:
+    def _translate_batch(self, lines: List[str], src_lang: str, tgt_lang: str,
+                        cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
         """Translate all lines in a single API call."""
         prompt = self._build_prompt(lines, src_lang, tgt_lang)
-        
+
         response = self._create_completion_with_backoff(
+            cancel_check=cancel_check,
             model=self.model,
             messages=[
                 {
@@ -132,13 +164,7 @@ class OpenAITranslationClient:
             ],
             temperature=self.temperature,
             top_p=self.top_p,
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "translation_response",
-                    "schema": self.response_schema
-                }
-            }
+            response_format=self._get_response_format()
         )
         
         content = response.choices[0].message.content
@@ -151,12 +177,14 @@ class OpenAITranslationClient:
         except (json.JSONDecodeError, KeyError) as e:
             raise ValueError(f"Invalid JSON response: {e}")
     
-    def _translate_indexed(self, lines: List[str], src_lang: str, tgt_lang: str) -> List[str]:
+    def _translate_indexed(self, lines: List[str], src_lang: str, tgt_lang: str,
+                          cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
         """Translate with explicit line indexing to help the model maintain structure."""
         indexed_lines = [f"[{i+1}] {line}" for i, line in enumerate(lines)]
         prompt = self._build_prompt(indexed_lines, src_lang, tgt_lang)
-        
+
         response = self._create_completion_with_backoff(
+            cancel_check=cancel_check,
             model=self.model,
             messages=[
                 {
@@ -173,13 +201,7 @@ class OpenAITranslationClient:
             ],
             temperature=self.temperature,
             top_p=self.top_p,
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "translation_response",
-                    "schema": self.response_schema
-                }
-            }
+            response_format=self._get_response_format()
         )
         
         content = response.choices[0].message.content
@@ -204,34 +226,52 @@ class OpenAITranslationClient:
         except (json.JSONDecodeError, KeyError) as e:
             raise ValueError(f"Invalid JSON response: {e}")
     
-    def _translate_line_by_line(self, lines: List[str], src_lang: str, tgt_lang: str, 
-                               max_retries: int) -> List[str]:
-        """Fallback: translate each line individually."""
+    def _translate_line_by_line(self, lines: List[str], src_lang: str, tgt_lang: str,
+                               max_retries: int,
+                               cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
+        """Fallback: translate each line individually.
+
+        Raises RuntimeError if any line fails after all retries so the caller
+        can abort the job instead of producing a mixed-language file.
+        """
         result = []
         for line in lines:
+            if cancel_check and cancel_check():
+                raise InterruptedError("Translation cancelled")
             if not line.strip():
                 result.append(line)
                 continue
-            
+
+            last_error: Optional[Exception] = None
             for attempt in range(max_retries):
+                if cancel_check and cancel_check():
+                    raise InterruptedError("Translation cancelled")
                 try:
-                    translated = self._translate_single_line(line, src_lang, tgt_lang)
+                    translated = self._translate_single_line(line, src_lang, tgt_lang, cancel_check)
                     result.append(translated)
                     break
+                except InterruptedError:
+                    raise
                 except Exception as e:
-                    if attempt == max_retries - 1:
-                        print(f"Failed to translate line after {max_retries} attempts: {line}")
-                        result.append(line)  # Keep original on failure
-                    else:
+                    last_error = e
+                    if attempt < max_retries - 1:
                         time.sleep(1)  # Wait before retry
-        
+            else:
+                # All retries exhausted for this line
+                raise RuntimeError(
+                    f"Failed to translate line after {max_retries} attempts: "
+                    f"\"{line[:80]}\" — {last_error}"
+                )
+
         return result
     
-    def _translate_single_line(self, line: str, src_lang: str, tgt_lang: str) -> str:
+    def _translate_single_line(self, line: str, src_lang: str, tgt_lang: str,
+                              cancel_check: Optional[Callable[[], bool]] = None) -> str:
         """Translate a single line."""
         prompt = self._build_prompt([line], src_lang, tgt_lang)
-        
+
         response = self._create_completion_with_backoff(
+            cancel_check=cancel_check,
             model=self.model,
             messages=[
                 {
@@ -247,13 +287,7 @@ class OpenAITranslationClient:
             ],
             temperature=self.temperature,
             top_p=self.top_p,
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "translation_response",
-                    "schema": self.response_schema
-                }
-            }
+            response_format=self._get_response_format()
         )
         
         content = response.choices[0].message.content

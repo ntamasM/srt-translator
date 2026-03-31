@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  AlertCircle,
   ArrowRightLeft,
   Play,
   RotateCcw,
@@ -257,9 +258,19 @@ export default function HomePage() {
           )}
 
           {error && (
-            <p className="rounded-lg bg-error/10 p-3 text-sm text-error dark:bg-dark-error/10 dark:text-error">
-              {error}
-            </p>
+            <div className="rounded-lg border border-error/30 bg-error/10 p-4 dark:border-dark-error/30 dark:bg-dark-error/10">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={18} className="mt-0.5 shrink-0 text-error dark:text-dark-error" />
+                <div>
+                  <p className="text-sm font-medium text-error dark:text-dark-error">
+                    Translation Failed
+                  </p>
+                  <p className="mt-1 text-xs text-error/80 dark:text-dark-error/80">
+                    {error}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
 
           <div className="space-y-3">

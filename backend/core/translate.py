@@ -5,7 +5,7 @@ import hashlib
 import threading
 import srt
 from pathlib import Path
-from typing import List, Optional
+from typing import Callable, List, Optional
 from tqdm import tqdm
 
 from .client_factory import create_translation_client
@@ -248,7 +248,8 @@ class SRTTranslator:
         payload = f"{self.ai_platform}|{self.model}|{src_lang}|{tgt_lang}|{line}".encode("utf-8")
         return hashlib.sha1(payload).hexdigest()
 
-    def _translate_lines_with_cache(self, lines: List[str], src_lang: str, tgt_lang: str) -> List[str]:
+    def _translate_lines_with_cache(self, lines: List[str], src_lang: str, tgt_lang: str,
+                                    cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
         """Translate lines using a cache for exact line matches.
 
         Cached values are reused immediately. Cache misses are translated in one
@@ -271,7 +272,8 @@ class SRTTranslator:
 
         if missing_indices:
             misses = [lines[i] for i in missing_indices]
-            translated_misses = self.client.translate_lines(misses, src_lang, tgt_lang)
+            translated_misses = self.client.translate_lines(misses, src_lang, tgt_lang,
+                                                            cancel_check=cancel_check)
             if len(translated_misses) != len(misses):
                 raise ValueError(
                     f"Line count mismatch for cache-miss batch: expected {len(misses)}, got {len(translated_misses)}"
@@ -295,6 +297,7 @@ class SRTTranslator:
         src_lang: str,
         tgt_lang: str,
         strict_quality_check: bool = True,
+        cancel_check: Optional[Callable[[], bool]] = None,
     ) -> List[srt.Subtitle]:
         """Translate a contiguous subtitle batch for better context and speed."""
         if not subtitles:
@@ -326,7 +329,7 @@ class SRTTranslator:
             lines_per_subtitle.append(local_count)
 
         translated_lines = self._translate_lines_with_cache(
-            protected_lines, src_lang, tgt_lang
+            protected_lines, src_lang, tgt_lang, cancel_check
         )
 
         if len(translated_lines) != len(protected_lines):

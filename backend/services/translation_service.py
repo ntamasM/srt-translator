@@ -173,6 +173,22 @@ async def run_translation(
             if progress_callback:
                 await progress_callback({"type": "cancelled", "file": filename, "message": "Translation cancelled"})
             break
+        except RuntimeError as e:
+            # Fatal translation failure — a subtitle could not be translated
+            # after all retries. Abort the entire job to avoid mixed-language files.
+            error_msg = str(e)
+            job["errors"][filename] = error_msg
+            if progress_callback:
+                await progress_callback({
+                    "type": "error",
+                    "file": filename,
+                    "message": f"Translation failed — the AI could not translate some lines after multiple attempts. "
+                               f"This usually means the API is overloaded or the model is struggling with the content. "
+                               f"Details: {error_msg}",
+                })
+            # Stop processing remaining files
+            cancel_event.set()
+            break
         except Exception as e:
             error_msg = str(e)
             job["errors"][filename] = error_msg
@@ -180,9 +196,16 @@ async def run_translation(
                 await progress_callback({"type": "error", "file": filename, "message": error_msg})
 
     if cancel_event.is_set():
-        job["status"] = "cancelled"
+        job["status"] = "cancelled" if job["status"] == "cancelling" else "error"
         if progress_callback:
-            await progress_callback({"type": "cancelled", "message": "Translation cancelled by user"})
+            if job["status"] == "cancelled":
+                await progress_callback({"type": "cancelled", "message": "Translation cancelled by user"})
+            else:
+                await progress_callback({
+                    "type": "error",
+                    "message": "Translation stopped — some lines could not be translated. "
+                               "The output file would have mixed languages.",
+                })
     else:
         job["status"] = "completed"
         if progress_callback:
@@ -260,6 +283,9 @@ async def _translate_file_parallel(
         )
         return any(sig in msg for sig in transient_signals)
 
+    def _cancel_check() -> bool:
+        return cancel_event.is_set()
+
     async def _translate_chunk_with_retry(chunk_subs):
         delay = 1.0
         for attempt in range(max_chunk_retries + 1):
@@ -274,9 +300,12 @@ async def _translate_file_parallel(
                         src_lang,
                         tgt_lang,
                         enable_quality_check,
+                        _cancel_check,
                     ),
                     timeout=chunk_timeout,
                 )
+            except InterruptedError:
+                raise CancelledError()
             except Exception as e:
                 is_last = attempt >= max_chunk_retries
                 if is_last or not _is_transient_error(e):
@@ -296,6 +325,8 @@ async def _translate_file_parallel(
 
             try:
                 chunk_result = await _translate_chunk_with_retry(chunk_subs)
+            except CancelledError:
+                raise
             except Exception as chunk_error:
                 # Fallback: keep robustness by attempting per-subtitle translation.
                 chunk_result = []
@@ -310,10 +341,18 @@ async def _translate_file_parallel(
                                 src_lang,
                                 tgt_lang,
                                 False,
+                                _cancel_check,
                             ),
                             timeout=max(90, chunk_timeout // 2),
                         )
                         chunk_result.extend(single)
+                    except (CancelledError, InterruptedError):
+                        raise CancelledError()
+                    except RuntimeError:
+                        # Fatal: line-by-line translation exhausted all retries.
+                        # Re-raise so the file is marked as failed instead of
+                        # producing a mixed-language output.
+                        raise
                     except Exception as e:
                         import srt as _srt
 
@@ -392,7 +431,13 @@ async def _translate_file_parallel(
         # Cancel remaining tasks
         for t in tasks:
             t.cancel()
-        # Wait for tasks to finish cancelling
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
+    except RuntimeError:
+        # Fatal translation failure — cancel remaining tasks and propagate
+        cancel_event.set()
+        for t in tasks:
+            t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
         raise
 

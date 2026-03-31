@@ -55,7 +55,11 @@ export default function ProgressCard({
         {progress.current} / {progress.total} cues translated
       </p>
       {progress.error && (
-        <p className="mt-1 text-xs text-error">{progress.error}</p>
+        <div className="mt-2 rounded-md bg-error/10 p-2.5 dark:bg-dark-error/10">
+          <p className="text-xs font-medium text-error dark:text-dark-error">
+            {progress.error}
+          </p>
+        </div>
       )}
     </div>
   );

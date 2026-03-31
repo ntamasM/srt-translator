@@ -3,7 +3,7 @@
 import json
 import random
 import time
-from typing import Dict, List, Optional, Any
+from typing import Callable, Dict, List, Optional, Any
 
 import anthropic
 
@@ -23,40 +23,52 @@ class ClaudeTranslationClient:
     # ------------------------------------------------------------------
 
     def translate_lines(self, lines: List[str], src_lang: str, tgt_lang: str,
-                        max_retries: int = 3) -> List[str]:
+                        max_retries: int = 3,
+                        cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
         if not lines or all(not line.strip() for line in lines):
             return lines
 
         # First attempt: batch
         try:
-            result = self._translate_batch(lines, src_lang, tgt_lang)
+            if cancel_check and cancel_check():
+                raise InterruptedError("Translation cancelled")
+            result = self._translate_batch(lines, src_lang, tgt_lang, cancel_check)
             if len(result) == len(lines):
                 return result
+        except InterruptedError:
+            raise
         except Exception as e:
             print(f"Batch translation failed: {e}")
 
         # Second attempt: indexed
         try:
-            result = self._translate_indexed(lines, src_lang, tgt_lang)
+            if cancel_check and cancel_check():
+                raise InterruptedError("Translation cancelled")
+            result = self._translate_indexed(lines, src_lang, tgt_lang, cancel_check)
             if len(result) == len(lines):
                 return result
+        except InterruptedError:
+            raise
         except Exception as e:
             print(f"Indexed translation failed: {e}")
 
         # Fallback: line-by-line
-        return self._translate_line_by_line(lines, src_lang, tgt_lang, max_retries)
+        return self._translate_line_by_line(lines, src_lang, tgt_lang, max_retries, cancel_check)
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _call(self, system: str, user: str) -> str:
+    def _call(self, system: str, user: str,
+              cancel_check: Optional[Callable[[], bool]] = None) -> str:
         """Make a Claude API call and return the text content."""
         delay = 1.0
         max_attempts = 3
         message = None
 
         for attempt in range(max_attempts):
+            if cancel_check and cancel_check():
+                raise InterruptedError("Translation cancelled")
             try:
                 message = self.client.messages.create(
                     model=self.model,
@@ -79,6 +91,8 @@ class ClaudeTranslationClient:
                 is_last = attempt == max_attempts - 1
                 if is_last or not retryable:
                     raise
+                if cancel_check and cancel_check():
+                    raise InterruptedError("Translation cancelled")
                 time.sleep(delay + random.uniform(0.0, 0.4))
                 delay = min(delay * 2.0, 8.0)
 
@@ -104,7 +118,8 @@ class ClaudeTranslationClient:
         parsed = json.loads(cleaned)
         return parsed["lines_translated"]
 
-    def _translate_batch(self, lines: List[str], src_lang: str, tgt_lang: str) -> List[str]:
+    def _translate_batch(self, lines: List[str], src_lang: str, tgt_lang: str,
+                        cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
         system = (
             f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
             "CRITICAL: Return exactly the same number of lines as provided. "
@@ -115,10 +130,11 @@ class ClaudeTranslationClient:
             "Respond with ONLY a JSON object — no extra text."
         )
         prompt = self._build_prompt(lines, src_lang, tgt_lang)
-        content = self._call(system, prompt)
+        content = self._call(system, prompt, cancel_check)
         return self._parse_json_response(content)
 
-    def _translate_indexed(self, lines: List[str], src_lang: str, tgt_lang: str) -> List[str]:
+    def _translate_indexed(self, lines: List[str], src_lang: str, tgt_lang: str,
+                          cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
         indexed_lines = [f"[{i+1}] {line}" for i, line in enumerate(lines)]
         system = (
             f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
@@ -129,7 +145,7 @@ class ClaudeTranslationClient:
             "Respond with ONLY a JSON object — no extra text."
         )
         prompt = self._build_prompt(indexed_lines, src_lang, tgt_lang)
-        content = self._call(system, prompt)
+        content = self._call(system, prompt, cancel_check)
         translated_indexed = self._parse_json_response(content)
 
         result = []
@@ -142,26 +158,44 @@ class ClaudeTranslationClient:
         return result
 
     def _translate_line_by_line(self, lines: List[str], src_lang: str, tgt_lang: str,
-                                max_retries: int) -> List[str]:
+                                max_retries: int,
+                                cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
+        """Fallback: translate each line individually.
+
+        Raises RuntimeError if any line fails after all retries so the caller
+        can abort the job instead of producing a mixed-language file.
+        """
         result = []
         for line in lines:
+            if cancel_check and cancel_check():
+                raise InterruptedError("Translation cancelled")
             if not line.strip():
                 result.append(line)
                 continue
+            last_error: Optional[Exception] = None
             for attempt in range(max_retries):
+                if cancel_check and cancel_check():
+                    raise InterruptedError("Translation cancelled")
                 try:
-                    translated = self._translate_single_line(line, src_lang, tgt_lang)
+                    translated = self._translate_single_line(line, src_lang, tgt_lang, cancel_check)
                     result.append(translated)
                     break
+                except InterruptedError:
+                    raise
                 except Exception as e:
-                    if attempt == max_retries - 1:
-                        print(f"Failed to translate line after {max_retries} attempts: {line}")
-                        result.append(line)
-                    else:
+                    last_error = e
+                    if attempt < max_retries - 1:
                         time.sleep(1)
+            else:
+                # All retries exhausted for this line
+                raise RuntimeError(
+                    f"Failed to translate line after {max_retries} attempts: "
+                    f"\"{line[:80]}\" — {last_error}"
+                )
         return result
 
-    def _translate_single_line(self, line: str, src_lang: str, tgt_lang: str) -> str:
+    def _translate_single_line(self, line: str, src_lang: str, tgt_lang: str,
+                              cancel_check: Optional[Callable[[], bool]] = None) -> str:
         system = (
             f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
             "Return exactly one translated line. "
@@ -170,7 +204,7 @@ class ClaudeTranslationClient:
             "Respond with ONLY a JSON object — no extra text."
         )
         prompt = self._build_prompt([line], src_lang, tgt_lang)
-        content = self._call(system, prompt)
+        content = self._call(system, prompt, cancel_check)
         translated_lines = self._parse_json_response(content)
         if len(translated_lines) != 1:
             raise ValueError(f"Expected 1 line, got {len(translated_lines)}")
