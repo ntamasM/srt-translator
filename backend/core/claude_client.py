@@ -12,11 +12,13 @@ class ClaudeTranslationClient:
     """Client for translating text using Anthropic's Claude Messages API."""
 
     def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514",
-                 temperature: float = 0.2, top_p: float = 0.1):
+                 temperature: float = 0.2, top_p: float = 0.1,
+                 top_k: Optional[int] = None):
         self.client = anthropic.Anthropic(api_key=api_key, timeout=60.0)
         self.model = model
         self.temperature = temperature
         self.top_p = top_p
+        self.top_k = top_k
 
     # ------------------------------------------------------------------
     # Public interface (same as OpenAITranslationClient)
@@ -70,7 +72,7 @@ class ClaudeTranslationClient:
             if cancel_check and cancel_check():
                 raise InterruptedError("Translation cancelled")
             try:
-                message = self.client.messages.create(
+                kwargs: Dict[str, Any] = dict(
                     model=self.model,
                     max_tokens=8192,
                     temperature=self.temperature,
@@ -78,6 +80,9 @@ class ClaudeTranslationClient:
                     system=system,
                     messages=[{"role": "user", "content": user}],
                 )
+                if self.top_k is not None:
+                    kwargs["top_k"] = self.top_k
+                message = self.client.messages.create(**kwargs)
                 break
             except Exception as e:
                 msg = str(e).lower()

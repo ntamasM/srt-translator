@@ -59,8 +59,13 @@ export default function OldFilesPage() {
 
   const handleDelete = async (filename: string) => {
     try {
-      await filesApi.deleteFile(filename);
-      setUploaded((prev) => prev.filter((f) => f.name !== filename));
+      if (tab === "translated") {
+        await filesApi.deleteTranslatedFile(filename);
+        setTranslated((prev) => prev.filter((f) => f.name !== filename));
+      } else {
+        await filesApi.deleteFile(filename);
+        setUploaded((prev) => prev.filter((f) => f.name !== filename));
+      }
       addToast("success", `Deleted ${filename}`);
     } catch (err: any) {
       addToast("error", err.message || "Delete failed");
@@ -220,6 +225,13 @@ export default function OldFilesPage() {
                       title="Download"
                     >
                       <Download size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(f.name)}
+                      className="rounded p-1.5 text-base-content/70 hover:bg-error/10 hover:text-error dark:text-dark-base-content/70 dark:hover:bg-dark-error/10 dark:hover:text-error"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </>
                 )}

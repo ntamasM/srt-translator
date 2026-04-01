@@ -46,4 +46,9 @@ export const filesApi = {
 
   deleteFile: (filename: string) =>
     del<{ message: string }>(`/files/${encodeURIComponent(filename)}`),
+
+  deleteTranslatedFile: (filename: string) =>
+    del<{ message: string }>(
+      `/files/translated/${encodeURIComponent(filename)}`,
+    ),
 };

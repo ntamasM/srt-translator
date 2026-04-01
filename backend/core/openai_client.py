@@ -16,18 +16,12 @@ class OpenAITranslationClient:
     passing a custom *base_url*.
     """
     
-    def __init__(self, api_key: str, model: str = "gpt-4o-mini", 
+    def __init__(self, api_key: str, model: str = "gpt-4o-mini",
                  temperature: float = 0.2, top_p: float = 0.1,
+                 top_k: Optional[int] = None,
+                 frequency_penalty: Optional[float] = None,
+                 presence_penalty: Optional[float] = None,
                  base_url: Optional[str] = None):
-        """Initialize the OpenAI-compatible client.
-        
-        Args:
-            api_key: API key for the provider
-            model: Model to use for translation
-            temperature: Sampling temperature
-            top_p: Top-p sampling parameter
-            base_url: Optional base URL for OpenAI-compatible endpoints
-        """
         kwargs: Dict[str, Any] = {"api_key": api_key, "timeout": 60.0}
         if base_url:
             kwargs["base_url"] = base_url
@@ -35,6 +29,8 @@ class OpenAITranslationClient:
         self.model = model
         self.temperature = temperature
         self.top_p = top_p
+        self.frequency_penalty = frequency_penalty
+        self.presence_penalty = presence_penalty
 
         # Use simple json_object format for non-OpenAI providers (e.g. DeepSeek)
         # as they don't support json_schema structured outputs.
@@ -52,6 +48,15 @@ class OpenAITranslationClient:
             "required": ["lines_translated"],
             "additionalProperties": False
         }
+
+    def _extra_params(self) -> Dict[str, Any]:
+        """Return optional sampling params that are set."""
+        params: Dict[str, Any] = {}
+        if self.frequency_penalty is not None:
+            params["frequency_penalty"] = self.frequency_penalty
+        if self.presence_penalty is not None:
+            params["presence_penalty"] = self.presence_penalty
+        return params
 
     def _get_response_format(self) -> dict:
         """Return the appropriate response_format for the provider."""
@@ -164,7 +169,8 @@ class OpenAITranslationClient:
             ],
             temperature=self.temperature,
             top_p=self.top_p,
-            response_format=self._get_response_format()
+            response_format=self._get_response_format(),
+            **self._extra_params(),
         )
         
         content = response.choices[0].message.content
@@ -201,7 +207,8 @@ class OpenAITranslationClient:
             ],
             temperature=self.temperature,
             top_p=self.top_p,
-            response_format=self._get_response_format()
+            response_format=self._get_response_format(),
+            **self._extra_params(),
         )
         
         content = response.choices[0].message.content
@@ -287,7 +294,8 @@ class OpenAITranslationClient:
             ],
             temperature=self.temperature,
             top_p=self.top_p,
-            response_format=self._get_response_format()
+            response_format=self._get_response_format(),
+            **self._extra_params(),
         )
         
         content = response.choices[0].message.content

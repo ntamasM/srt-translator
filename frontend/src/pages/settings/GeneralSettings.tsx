@@ -6,7 +6,7 @@ import SelectField from "../../components/SelectField";
 import { useSettings } from "../../hooks/useSettings";
 import { useTheme } from "../../hooks/useTheme";
 import { useToast } from "../../components/Toast";
-import { AI_PLATFORMS, DEFAULT_MODELS } from "../../utils/constants";
+import { AI_PLATFORMS, DEFAULT_MODELS, PLATFORM_PARAMS } from "../../utils/constants";
 import type { Settings } from "../../types/settings";
 import type { Theme } from "../../types/settings";
 
@@ -135,46 +135,29 @@ export default function GeneralSettings() {
         hint={`Default for ${form.ai_platform}: ${DEFAULT_MODELS[form.ai_platform || "openai"]}`}
       />
 
-      {/* Temperature & Top-P */}
+      {/* Model Parameters (dynamic per platform) */}
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-base-content/80 dark:text-dark-base-content">
-            Temperature ({form.temperature})
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="2"
-            step="0.1"
-            value={form.temperature ?? 0.2}
-            onChange={(e) =>
-              handleChange("temperature", parseFloat(e.target.value))
-            }
-            className="w-full"
-          />
-          <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
-            Controls randomness. Lower values (0.1–0.3) produce more consistent
-            translations; higher values add variety.
-          </p>
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-base-content/80 dark:text-dark-base-content">
-            Top-P ({form.top_p})
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={form.top_p ?? 0.1}
-            onChange={(e) => handleChange("top_p", parseFloat(e.target.value))}
-            className="w-full"
-          />
-          <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
-            Nucleus sampling threshold. Lower values make output more focused
-            and deterministic.
-          </p>
-        </div>
+        {(PLATFORM_PARAMS[form.ai_platform || "openai"] || []).map((param) => (
+          <div key={param.field}>
+            <label className="mb-1 block text-sm font-medium text-base-content/80 dark:text-dark-base-content">
+              {param.label} ({(form as any)[param.field] ?? param.defaultValue})
+            </label>
+            <input
+              type="range"
+              min={param.min}
+              max={param.max}
+              step={param.step}
+              value={(form as any)[param.field] ?? param.defaultValue}
+              onChange={(e) =>
+                handleChange(param.field, parseFloat(e.target.value))
+              }
+              className="w-full"
+            />
+            <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
+              {param.hint}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Languages */}

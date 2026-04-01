@@ -49,6 +49,15 @@ def download_file(filename: str, request: Request):
     return FileResponse(path, filename=filename, media_type="application/octet-stream")
 
 
+@router.delete("/translated/{filename:path}")
+def delete_translated_file(filename: str, request: Request):
+    """Delete a translated subtitle file."""
+    deleted = file_service.delete_translated_file(_sid(request), filename)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Translated file not found: {filename}")
+    return {"message": f"Deleted {filename}"}
+
+
 @router.delete("/{filename:path}")
 def delete_file(filename: str, request: Request):
     """Delete an uploaded subtitle file."""

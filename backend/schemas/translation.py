@@ -15,6 +15,9 @@ class TranslationSettings(BaseModel):
     model: str = "gpt-4o-mini"
     temperature: float = 0.2
     top_p: float = 0.1
+    top_k: Optional[int] = None
+    frequency_penalty: Optional[float] = None
+    presence_penalty: Optional[float] = None
     src_lang: str = "en"
     tgt_lang: str = "el"
     translator_name: str = "AI"

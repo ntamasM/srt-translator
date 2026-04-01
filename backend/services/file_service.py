@@ -77,6 +77,15 @@ def delete_file(session_id: str, filename: str) -> bool:
     return False
 
 
+def delete_translated_file(session_id: str, filename: str) -> bool:
+    """Delete a file from data/translated/{session_id}/. Returns True if deleted."""
+    path = _session_translated(session_id) / filename
+    if path.exists():
+        path.unlink()
+        return True
+    return False
+
+
 def list_translated_files(session_id: str) -> list[dict]:
     """List all .srt files in data/translated/{session_id}/."""
     d = _session_translated(session_id)

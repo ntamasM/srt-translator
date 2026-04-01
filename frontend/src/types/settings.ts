@@ -6,6 +6,9 @@ export interface Settings {
   model: string;
   temperature: number;
   top_p: number;
+  top_k: number;
+  frequency_penalty: number;
+  presence_penalty: number;
   src_lang: string;
   tgt_lang: string;
   translator_name: string;

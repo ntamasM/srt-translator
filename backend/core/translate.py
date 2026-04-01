@@ -17,34 +17,26 @@ from .word_removal import WordRemover
 class SRTTranslator:
     """Handles translation of SRT subtitle files while preserving structure."""
     
-    def __init__(self, api_key: str, model: str = "gpt-4o-mini", 
+    def __init__(self, api_key: str, model: str = "gpt-4o-mini",
                  temperature: float = 0.2, top_p: float = 0.1,
-                 matching_file: Optional[str] = None, 
+                 top_k: Optional[int] = None,
+                 frequency_penalty: Optional[float] = None,
+                 presence_penalty: Optional[float] = None,
+                 matching_file: Optional[str] = None,
                  matching_case_insensitive: bool = False,
                  replace_credits: bool = True,
                  translator_name: str = "AI",
                  removal_file: Optional[str] = None,
                  ai_platform: str = "openai"):
-        """Initialize the SRT translator.
-        
-        Args:
-            api_key: API key for the chosen AI platform
-            model: Model to use for translation
-            temperature: Sampling temperature
-            top_p: Top-p sampling parameter
-            matching_file: Path to matching file
-            matching_case_insensitive: Whether matching should be case-insensitive
-            replace_credits: Whether to replace translator credits
-            translator_name: Name of the translator to use in credits
-            removal_file: Path to file containing words to completely remove
-            ai_platform: AI provider to use (openai, gemini, claude)
-        """
         self.client = create_translation_client(
             ai_platform=ai_platform,
             api_key=api_key,
             model=model,
             temperature=temperature,
             top_p=top_p,
+            top_k=top_k,
+            frequency_penalty=frequency_penalty,
+            presence_penalty=presence_penalty,
         )
         self.model = model
         self.ai_platform = ai_platform
