@@ -19,6 +19,7 @@ import { useToast } from "../components/Toast";
 import { formatFileSize, overallProgress } from "../utils/helpers";
 import { filesApi } from "../api/filesApi";
 import { getMatchingWords, getRemovalWords, getSettings } from "../utils/db";
+import { LANGUAGES } from "../utils/constants";
 
 export default function HomePage() {
   const { settings, updateSettings } = useSettings();
@@ -144,16 +145,22 @@ export default function HomePage() {
             <span className="text-sm font-medium text-base-content/70 dark:text-dark-base-content">
               Source:
             </span>
-            <input
+            <select
               value={settings.src_lang}
               onChange={(e) => updateSettings({ src_lang: e.target.value })}
-              className="w-14 rounded border border-base-300 px-2 py-1 text-center text-sm dark:border-dark-base-300 dark:bg-dark-base-300 dark:text-dark-base-content"
-            />
+              className="rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-300 dark:text-dark-base-content"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button
             onClick={handleSwapLanguages}
-            className="rounded-full p-2 text-base-content/50 hover:bg-base-200 hover:text-base-content/70 dark:hover:bg-dark-base-200"
+            className="rounded-full p-2 text-base-content/50 hover:bg-base-200 hover:text-base-content/70 dark:text-dark-base-content/50 dark:hover:bg-dark-base-200 dark:hover:text-dark-base-content/70"
             title="Swap languages"
           >
             <ArrowRightLeft size={18} />
@@ -163,11 +170,17 @@ export default function HomePage() {
             <span className="text-sm font-medium text-base-content/70 dark:text-dark-base-content">
               Target:
             </span>
-            <input
+            <select
               value={settings.tgt_lang}
               onChange={(e) => updateSettings({ tgt_lang: e.target.value })}
-              className="w-14 rounded border border-base-300 px-2 py-1 text-center text-sm dark:border-dark-base-300 dark:bg-dark-base-300 dark:text-dark-base-content"
-            />
+              className="rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-300 dark:text-dark-base-content"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.value} value={l.value}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       )}
@@ -196,13 +209,13 @@ export default function HomePage() {
                     <p className="text-sm font-medium text-base-content dark:text-dark-base-content">
                       {f.name}
                     </p>
-                    <p className="text-xs text-base-content/60">
+                    <p className="text-xs text-base-content/60 dark:text-dark-base-content/60">
                       {formatFileSize(f.size)}
                     </p>
                   </div>
                   <button
                     onClick={() => handleRemoveFile(f.name)}
-                    className="rounded p-1 text-base-content/50 hover:bg-error/10 hover:text-error dark:hover:bg-dark-error/10"
+                    className="rounded p-1 text-base-content/50 dark:text-dark-base-content/50 hover:bg-error/10 hover:text-error dark:hover:bg-dark-error/10 dark:hover:text-dark-error"
                   >
                     <X size={16} />
                   </button>
@@ -260,7 +273,10 @@ export default function HomePage() {
           {error && (
             <div className="rounded-lg border border-error/30 bg-error/10 p-4 dark:border-dark-error/30 dark:bg-dark-error/10">
               <div className="flex items-start gap-2">
-                <AlertCircle size={18} className="mt-0.5 shrink-0 text-error dark:text-dark-error" />
+                <AlertCircle
+                  size={18}
+                  className="mt-0.5 shrink-0 text-error dark:text-dark-error"
+                />
                 <div>
                   <p className="text-sm font-medium text-error dark:text-dark-error">
                     Translation Failed

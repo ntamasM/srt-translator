@@ -6,7 +6,12 @@ import SelectField from "../../components/SelectField";
 import { useSettings } from "../../hooks/useSettings";
 import { useTheme } from "../../hooks/useTheme";
 import { useToast } from "../../components/Toast";
-import { AI_PLATFORMS, DEFAULT_MODELS, PLATFORM_PARAMS } from "../../utils/constants";
+import {
+  AI_PLATFORMS,
+  DEFAULT_MODELS,
+  LANGUAGES,
+  PLATFORM_PARAMS,
+} from "../../utils/constants";
 import type { Settings } from "../../types/settings";
 import type { Theme } from "../../types/settings";
 
@@ -162,17 +167,19 @@ export default function GeneralSettings() {
 
       {/* Languages */}
       <div className="grid grid-cols-2 gap-4">
-        <InputField
+        <SelectField
           label="Source Language"
+          options={LANGUAGES.map((l) => ({ value: l.value, label: l.label }))}
           value={form.src_lang || ""}
           onChange={(e) => handleChange("src_lang", e.target.value)}
-          hint="Language code of the original subtitles (e.g. en, ja, es)."
+          hint="Language of the original subtitles."
         />
-        <InputField
+        <SelectField
           label="Target Language"
+          options={LANGUAGES.map((l) => ({ value: l.value, label: l.label }))}
           value={form.tgt_lang || ""}
           onChange={(e) => handleChange("tgt_lang", e.target.value)}
-          hint="Language code to translate subtitles into (e.g. el, fr, de)."
+          hint="Language to translate subtitles into."
         />
       </div>
 
