@@ -3,19 +3,17 @@ import { NavLink } from "react-router-dom";
 import {
   Home,
   Settings,
-  BookOpen,
-  Trash2,
   FolderOpen,
   Info,
+  Package,
 } from "lucide-react";
 import logoIcon from "../../assets/icons/Srt-Translator--icon.svg";
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
   { to: "/files", label: "Old Files", icon: FolderOpen },
+  { to: "/packages", label: "Packages", icon: Package },
   { to: "/settings/general", label: "General", icon: Settings },
-  { to: "/settings/matching", label: "Matching Words", icon: BookOpen },
-  { to: "/settings/removal", label: "Remove Words", icon: Trash2 },
   { to: "/about", label: "About", icon: Info },
 ];
 

@@ -21,7 +21,8 @@ class OpenAITranslationClient:
                  top_k: Optional[int] = None,
                  frequency_penalty: Optional[float] = None,
                  presence_penalty: Optional[float] = None,
-                 base_url: Optional[str] = None):
+                 base_url: Optional[str] = None,
+                 keywords: Optional[List[str]] = None):
         kwargs: Dict[str, Any] = {"api_key": api_key, "timeout": 60.0}
         if base_url:
             kwargs["base_url"] = base_url
@@ -31,6 +32,7 @@ class OpenAITranslationClient:
         self.top_p = top_p
         self.frequency_penalty = frequency_penalty
         self.presence_penalty = presence_penalty
+        self.keywords = keywords or []
 
         # Use simple json_object format for non-OpenAI providers (e.g. DeepSeek)
         # as they don't support json_schema structured outputs.
@@ -57,6 +59,18 @@ class OpenAITranslationClient:
         if self.presence_penalty is not None:
             params["presence_penalty"] = self.presence_penalty
         return params
+
+    def _build_context_string(self) -> str:
+        """Build a context string from keywords to inject into system prompts."""
+        if not self.keywords:
+            return ""
+        title = self.keywords[0] if self.keywords else ""
+        other = self.keywords[1:] if len(self.keywords) > 1 else []
+        parts = f'You are translating subtitles for "{title}".'
+        if other:
+            parts += f" Content context: {', '.join(other)}."
+        parts += " Use this context to produce natural, accurate translations that match the tone, genre, and terminology of this content. "
+        return parts
 
     def _get_response_format(self) -> dict:
         """Return the appropriate response_format for the provider."""
@@ -158,6 +172,7 @@ class OpenAITranslationClient:
                     "role": "system",
                     "content": (
                         f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
+                        f"{self._build_context_string()}"
                         "CRITICAL: Return exactly the same number of lines as provided. "
                         "Do not add, remove, merge, or split lines. "
                         "Preserve all placeholders exactly as they appear. "
@@ -172,17 +187,17 @@ class OpenAITranslationClient:
             response_format=self._get_response_format(),
             **self._extra_params(),
         )
-        
+
         content = response.choices[0].message.content
         if not content:
             raise ValueError("Empty response from OpenAI")
-        
+
         try:
             parsed = json.loads(content)
             return parsed["lines_translated"]
         except (json.JSONDecodeError, KeyError) as e:
             raise ValueError(f"Invalid JSON response: {e}")
-    
+
     def _translate_indexed(self, lines: List[str], src_lang: str, tgt_lang: str,
                           cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
         """Translate with explicit line indexing to help the model maintain structure."""
@@ -197,6 +212,7 @@ class OpenAITranslationClient:
                     "role": "system",
                     "content": (
                         f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
+                        f"{self._build_context_string()}"
                         "Each line is prefixed with [N]. Keep the [N] prefix but translate the content after it. "
                         "CRITICAL: Return exactly the same number of lines as provided. "
                         "Preserve all placeholders exactly as they appear. "
@@ -285,6 +301,7 @@ class OpenAITranslationClient:
                     "role": "system",
                     "content": (
                         f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
+                        f"{self._build_context_string()}"
                         "Return exactly one translated line. "
                         "Preserve all placeholders exactly as they appear. "
                         "DO NOT translate any text matching these patterns: MATCHINGTERM_{}, HTMLENTITY_{}, HTMLTAG_{}."

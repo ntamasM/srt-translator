@@ -17,6 +17,7 @@ export interface Settings {
   add_credits: boolean;
   append_credits_at_end: boolean;
   theme: Theme;
+  activePackageId: string | null;
 }
 
 export interface MatchingWord {
@@ -26,4 +27,15 @@ export interface MatchingWord {
 
 export interface RemovalWord {
   word: string;
+}
+
+export interface TranslationPackage {
+  id: string;
+  name: string;
+  titleKeyword: string;
+  keywords: string[];
+  matchingWords: MatchingWord[];
+  removalWords: string[];
+  createdAt: number;
+  updatedAt: number;
 }

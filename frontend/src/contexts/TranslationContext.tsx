@@ -46,6 +46,7 @@ interface TranslationContextValue {
     settings: Settings,
     matchingWords?: MatchingWord[],
     removalWords?: string[],
+    keywords?: string[],
   ) => Promise<void>;
   cancelTranslation: () => Promise<void>;
   reset: () => void;
@@ -108,6 +109,7 @@ export function TranslationProvider({
       settings: Settings,
       matchingWords: MatchingWord[] = [],
       removalWords: string[] = [],
+      keywords: string[] = [],
     ) => {
       setStatus("translating");
       setError(null);
@@ -125,6 +127,7 @@ export function TranslationProvider({
           settings,
           matchingWords,
           removalWords,
+          keywords,
         );
         const jobId = result.job_id;
         jobIdRef.current = jobId;

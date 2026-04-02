@@ -12,6 +12,7 @@ export const translationApi = {
     settings: Settings,
     matchingWords: MatchingWord[] = [],
     removalWords: string[] = [],
+    keywords: string[] = [],
   ) =>
     post<TranslationResult>("/translate", {
       files,
@@ -37,6 +38,7 @@ export const translationApi = {
         target: w.target,
       })),
       removal_words: removalWords,
+      keywords,
     }),
 
   cancelTranslation: (jobId: string) =>

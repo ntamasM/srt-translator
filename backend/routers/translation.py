@@ -25,6 +25,7 @@ def start_translation(req: TranslationRequest, request: Request):
         settings=settings_dict,
         matching_words=matching,
         removal_words=req.removal_words,
+        keywords=req.keywords,
     )
     return TranslationResult(job_id=job_id, status="started", message="Connect to WebSocket to begin")
 

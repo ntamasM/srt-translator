@@ -13,12 +13,26 @@ class ClaudeTranslationClient:
 
     def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514",
                  temperature: float = 0.2, top_p: float = 0.1,
-                 top_k: Optional[int] = None):
+                 top_k: Optional[int] = None,
+                 keywords: Optional[List[str]] = None):
         self.client = anthropic.Anthropic(api_key=api_key, timeout=60.0)
         self.model = model
         self.temperature = temperature
         self.top_p = top_p
         self.top_k = top_k
+        self.keywords = keywords or []
+
+    def _build_context_string(self) -> str:
+        """Build a context string from keywords to inject into system prompts."""
+        if not self.keywords:
+            return ""
+        title = self.keywords[0] if self.keywords else ""
+        other = self.keywords[1:] if len(self.keywords) > 1 else []
+        parts = f'You are translating subtitles for "{title}".'
+        if other:
+            parts += f" Content context: {', '.join(other)}."
+        parts += " Use this context to produce natural, accurate translations that match the tone, genre, and terminology of this content. "
+        return parts
 
     # ------------------------------------------------------------------
     # Public interface (same as OpenAITranslationClient)
@@ -127,6 +141,7 @@ class ClaudeTranslationClient:
                         cancel_check: Optional[Callable[[], bool]] = None) -> List[str]:
         system = (
             f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
+            f"{self._build_context_string()}"
             "CRITICAL: Return exactly the same number of lines as provided. "
             "Do not add, remove, merge, or split lines. "
             "Preserve all placeholders exactly as they appear. "
@@ -143,6 +158,7 @@ class ClaudeTranslationClient:
         indexed_lines = [f"[{i+1}] {line}" for i, line in enumerate(lines)]
         system = (
             f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
+            f"{self._build_context_string()}"
             "Each line is prefixed with [N]. Keep the [N] prefix but translate the content after it. "
             "CRITICAL: Return exactly the same number of lines as provided. "
             "Preserve all placeholders exactly as they appear. "
@@ -203,6 +219,7 @@ class ClaudeTranslationClient:
                               cancel_check: Optional[Callable[[], bool]] = None) -> str:
         system = (
             f"You are a professional translator. Translate from {src_lang} to {tgt_lang}. "
+            f"{self._build_context_string()}"
             "Return exactly one translated line. "
             "Preserve all placeholders exactly as they appear. "
             "DO NOT translate any text matching these patterns: MATCHINGTERM_{}, HTMLENTITY_{}, HTMLTAG_{}. "

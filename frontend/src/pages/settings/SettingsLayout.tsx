@@ -3,8 +3,7 @@ import { Outlet, NavLink } from "react-router-dom";
 
 const tabs = [
   { to: "/settings/general", label: "General" },
-  { to: "/settings/matching", label: "Matching Words" },
-  { to: "/settings/removal", label: "Remove Words" },
+  { to: "/settings/data", label: "Manage Data" },
 ];
 
 export default function SettingsLayout() {

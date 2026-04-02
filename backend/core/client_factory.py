@@ -1,6 +1,6 @@
 """Factory for creating the correct translation client based on the AI platform."""
 
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 # OpenAI-compatible endpoint base URLs
 _GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
@@ -16,6 +16,7 @@ def create_translation_client(
     top_k: Optional[int] = None,
     frequency_penalty: Optional[float] = None,
     presence_penalty: Optional[float] = None,
+    keywords: Optional[List[str]] = None,
 ) -> Any:
     """Return a translation client that exposes ``translate_lines()``.
 
@@ -43,6 +44,7 @@ def create_translation_client(
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
             base_url=base_url_map.get(platform),
+            keywords=keywords,
         )
 
     if platform == "claude":
@@ -54,6 +56,7 @@ def create_translation_client(
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
+            keywords=keywords,
         )
 
     raise ValueError(

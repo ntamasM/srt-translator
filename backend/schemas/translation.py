@@ -37,6 +37,7 @@ class TranslationRequest(BaseModel):
     settings: TranslationSettings
     matching_words: list[MatchingWordEntry] = []  # sent from client IndexedDB
     removal_words: list[str] = []  # sent from client IndexedDB
+    keywords: list[str] = []  # context keywords from active package
 
 
 class TranslationProgress(BaseModel):

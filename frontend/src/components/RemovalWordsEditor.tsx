@@ -1,91 +1,77 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   Plus,
   Trash2,
   Pencil,
   Search,
-  ArrowRight,
+  Upload,
   Check,
   X,
-  Upload,
   CheckSquare,
   Square,
   MinusSquare,
 } from "lucide-react";
-import Button from "../../components/Button";
-import Modal from "../../components/Modal";
-import {
-  getMatchingWords,
-  addMatchingWord,
-  removeMatchingWord,
-  updateMatchingWord,
-  importMatchingWords,
-  removeMatchingWords,
-} from "../../utils/db";
-import { useToast } from "../../components/Toast";
-import type { MatchingWord } from "../../types/settings";
+import Button from "./Button";
+import Modal from "./Modal";
+import { useToast } from "./Toast";
 
-export default function MatchingWords() {
-  const [words, setWords] = useState<MatchingWord[]>([]);
-  const [source, setSource] = useState("");
-  const [target, setTarget] = useState("");
+interface RemovalWordsEditorProps {
+  words: string[];
+  loading: boolean;
+  onAdd: (word: string) => Promise<void>;
+  onDelete: (word: string) => Promise<void>;
+  onImport: (words: string[]) => Promise<void>;
+  onBulkDelete: (words: string[]) => Promise<void>;
+  onBulkUpdate: (
+    toRemove: string[],
+    toAdd: string[],
+  ) => Promise<void>;
+  description?: string;
+}
+
+export default function RemovalWordsEditor({
+  words,
+  loading,
+  onAdd,
+  onDelete,
+  onImport,
+  onBulkDelete,
+  onBulkUpdate,
+  description,
+}: RemovalWordsEditorProps) {
+  const [newWord, setNewWord] = useState("");
   const [search, setSearch] = useState("");
-  const [editIdx, setEditIdx] = useState<number | null>(null);
-  const [editSource, setEditSource] = useState("");
-  const [editTarget, setEditTarget] = useState("");
-  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkEdits, setBulkEdits] = useState<
-    Map<string, { source: string; target: string }>
-  >(new Map());
+  const [bulkEdits, setBulkEdits] = useState<Map<string, string>>(new Map());
   const { addToast } = useToast();
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const data = await getMatchingWords();
-      setWords(data);
-    } catch (err: any) {
-      addToast("error", "Failed to load matching words");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
-
   const handleAdd = async () => {
-    if (!source.trim()) return;
+    if (!newWord.trim()) return;
     try {
-      await addMatchingWord(source.trim(), target.trim() || source.trim());
-      await load();
-      setSource("");
-      setTarget("");
-      addToast("success", "Matching word added");
+      await onAdd(newWord.trim());
+      setNewWord("");
+      addToast("success", "Removal word added");
     } catch (err: any) {
       addToast("error", err.message);
     }
   };
 
-  const handleDelete = async (src: string) => {
+  const handleDelete = async (word: string) => {
     try {
-      await removeMatchingWord(src);
-      selected.delete(src);
+      await onDelete(word);
+      selected.delete(word);
       setSelected(new Set(selected));
-      await load();
-      addToast("success", "Matching word removed");
+      addToast("success", "Removal word removed");
     } catch (err: any) {
       addToast("error", err.message);
     }
   };
 
   /* ── Selection ───────────────────────────────────────────────────── */
-  const toggleSelect = (source: string) => {
+  const toggleSelect = (word: string) => {
     const next = new Set(selected);
-    if (next.has(source)) next.delete(source);
-    else next.add(source);
+    if (next.has(word)) next.delete(word);
+    else next.add(word);
     setSelected(next);
   };
 
@@ -93,7 +79,7 @@ export default function MatchingWords() {
     if (selected.size === filtered.length) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(filtered.map((w) => w.source)));
+      setSelected(new Set(filtered));
     }
   };
 
@@ -106,10 +92,10 @@ export default function MatchingWords() {
   const handleBulkDelete = async () => {
     if (selected.size === 0) return;
     try {
-      await removeMatchingWords([...selected]);
+      const count = selected.size;
+      await onBulkDelete([...selected]);
       setSelected(new Set());
-      await load();
-      addToast("success", `Deleted ${selected.size} matching word(s)`);
+      addToast("success", `Deleted ${count} removal word(s)`);
     } catch (err: any) {
       addToast("error", err.message);
     }
@@ -117,65 +103,31 @@ export default function MatchingWords() {
 
   /* ── Bulk edit ───────────────────────────────────────────────────── */
   const startBulkEdit = () => {
-    const edits = new Map<string, { source: string; target: string }>();
-    for (const src of selected) {
-      const w = words.find((w) => w.source === src);
-      if (w) edits.set(src, { source: w.source, target: w.target });
+    const edits = new Map<string, string>();
+    for (const word of selected) {
+      edits.set(word, word);
     }
     setBulkEdits(edits);
   };
 
   const cancelBulkEdit = () => setBulkEdits(new Map());
 
-  const updateBulkEdit = (
-    originalSource: string,
-    field: "source" | "target",
-    value: string,
-  ) => {
+  const updateBulkEdit = (originalWord: string, value: string) => {
     const next = new Map(bulkEdits);
-    const entry = next.get(originalSource);
-    if (entry) {
-      next.set(originalSource, { ...entry, [field]: value });
-      setBulkEdits(next);
-    }
+    next.set(originalWord, value);
+    setBulkEdits(next);
   };
 
   const saveBulkEdit = async () => {
     try {
-      for (const [originalSource, edit] of bulkEdits) {
-        await updateMatchingWord(
-          originalSource,
-          edit.source.trim(),
-          edit.target.trim(),
-        );
-      }
+      const toRemove = [...bulkEdits.keys()];
+      const toAdd = [...bulkEdits.values()]
+        .map((v) => v.trim())
+        .filter(Boolean);
+      await onBulkUpdate(toRemove, toAdd);
       setBulkEdits(new Map());
       setSelected(new Set());
-      await load();
-      addToast("success", `Updated ${bulkEdits.size} matching word(s)`);
-    } catch (err: any) {
-      addToast("error", err.message);
-    }
-  };
-
-  const startEdit = (idx: number) => {
-    setEditIdx(idx);
-    setEditSource(words[idx].source);
-    setEditTarget(words[idx].target);
-  };
-
-  const cancelEdit = () => {
-    setEditIdx(null);
-  };
-
-  const saveEdit = async () => {
-    if (editIdx === null) return;
-    const oldSource = words[editIdx].source;
-    try {
-      await updateMatchingWord(oldSource, editSource.trim(), editTarget.trim());
-      await load();
-      setEditIdx(null);
-      addToast("success", "Matching word updated");
+      addToast("success", `Updated ${bulkEdits.size} removal word(s)`);
     } catch (err: any) {
       addToast("error", err.message);
     }
@@ -186,19 +138,13 @@ export default function MatchingWords() {
   const [bulkJson, setBulkJson] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const parseBulkJson = (text: string): MatchingWord[] => {
+  const parseBulkJson = (text: string): string[] => {
     const parsed = JSON.parse(text);
     if (!Array.isArray(parsed)) throw new Error("JSON must be an array");
     return parsed.map((item: any, i: number) => {
-      if (typeof item.source !== "string" || !item.source.trim())
-        throw new Error(`Item ${i}: missing "source"`);
-      return {
-        source: item.source.trim(),
-        target:
-          typeof item.target === "string" && item.target.trim()
-            ? item.target.trim()
-            : item.source.trim(),
-      };
+      if (typeof item !== "string" || !item.trim())
+        throw new Error(`Item ${i}: must be a non-empty string`);
+      return item.trim();
     });
   };
 
@@ -209,11 +155,10 @@ export default function MatchingWords() {
         addToast("error", "No entries found in JSON");
         return;
       }
-      await importMatchingWords(entries);
-      await load();
+      await onImport(entries);
       setBulkJson("");
       setBulkOpen(false);
-      addToast("success", `Imported ${entries.length} matching word(s)`);
+      addToast("success", `Imported ${entries.length} removal word(s)`);
     } catch (err: any) {
       addToast("error", `Invalid JSON: ${err.message}`);
     }
@@ -231,36 +176,26 @@ export default function MatchingWords() {
   const filtered = useMemo(
     () =>
       search
-        ? words.filter(
-            (w) =>
-              w.source.toLowerCase().includes(search.toLowerCase()) ||
-              w.target.toLowerCase().includes(search.toLowerCase()),
-          )
+        ? words.filter((w) => w.toLowerCase().includes(search.toLowerCase()))
         : words,
     [words, search],
   );
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-base-content/70 dark:text-dark-base-content/50">
-        Matching words are protected during translation. Source terms are
-        shielded from the AI, then replaced with the target term in the final
-        output. Format: <code className="text-xs">source --&gt; target</code>
-      </p>
+      {description && (
+        <p className="text-sm text-base-content/70 dark:text-dark-base-content/50">
+          {description}
+        </p>
+      )}
 
       {/* Add form */}
       <div className="flex gap-2">
         <input
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
-          placeholder="Source term"
-          className="flex-1 rounded-lg border border-base-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
-        />
-        <ArrowRight size={18} className="mt-2.5 text-base-content/50" />
-        <input
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          placeholder="Target term"
+          value={newWord}
+          onChange={(e) => setNewWord(e.target.value)}
+          placeholder="Word or phrase to remove"
+          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           className="flex-1 rounded-lg border border-base-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
         />
         <Button onClick={handleAdd} icon={<Plus size={16} />}>
@@ -350,7 +285,7 @@ export default function MatchingWords() {
       {loading ? (
         <p className="text-sm text-base-content/60">Loading…</p>
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-base-content/60">No matching words found.</p>
+        <p className="text-sm text-base-content/60">No removal words found.</p>
       ) : (
         <div className="max-h-112 space-y-1 overflow-y-auto">
           {/* Select-all header */}
@@ -368,71 +303,25 @@ export default function MatchingWords() {
             {selected.size === filtered.length ? "Deselect all" : "Select all"}
           </button>
 
-          {filtered.map((w) => {
-            const realIdx = words.indexOf(w);
-            const isEditing = editIdx === realIdx;
-            const isBulkEditing = bulkEdits.has(w.source);
-            const isSelected = selected.has(w.source);
-
-            if (isEditing) {
-              return (
-                <div
-                  key={w.source}
-                  className="flex items-center gap-2 rounded-lg border border-accent bg-primary/10 px-3 py-2 dark:border-dark-primary dark:bg-dark-primary/10"
-                >
-                  <input
-                    value={editSource}
-                    onChange={(e) => setEditSource(e.target.value)}
-                    className="flex-1 rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
-                  />
-                  <ArrowRight size={14} className="text-base-content/50" />
-                  <input
-                    value={editTarget}
-                    onChange={(e) => setEditTarget(e.target.value)}
-                    className="flex-1 rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
-                  />
-                  <button
-                    onClick={saveEdit}
-                    className="rounded p-1 text-success hover:bg-success/10 dark:hover:bg-dark-success/20"
-                  >
-                    <Check size={16} />
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="rounded p-1 text-base-content/50 hover:bg-base-200 dark:hover:bg-dark-base-200"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              );
-            }
+          {filtered.map((word) => {
+            const isSelected = selected.has(word);
+            const isBulkEditing = bulkEdits.has(word);
 
             if (isBulkEditing) {
-              const edit = bulkEdits.get(w.source)!;
               return (
                 <div
-                  key={w.source}
+                  key={word}
                   className="flex items-center gap-2 rounded-lg border border-accent bg-primary/10 px-3 py-2 dark:border-dark-primary dark:bg-dark-primary/10"
                 >
                   <input
                     type="checkbox"
                     checked
-                    onChange={() => toggleSelect(w.source)}
+                    onChange={() => toggleSelect(word)}
                     className="h-4 w-4 rounded border-base-300 text-primary focus:ring-primary"
                   />
                   <input
-                    value={edit.source}
-                    onChange={(e) =>
-                      updateBulkEdit(w.source, "source", e.target.value)
-                    }
-                    className="flex-1 rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
-                  />
-                  <ArrowRight size={14} className="text-base-content/50" />
-                  <input
-                    value={edit.target}
-                    onChange={(e) =>
-                      updateBulkEdit(w.source, "target", e.target.value)
-                    }
+                    value={bulkEdits.get(word)!}
+                    onChange={(e) => updateBulkEdit(word, e.target.value)}
                     className="flex-1 rounded border border-base-300 px-2 py-1 text-sm dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
                   />
                 </div>
@@ -441,7 +330,7 @@ export default function MatchingWords() {
 
             return (
               <div
-                key={w.source}
+                key={word}
                 className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
                   isSelected
                     ? "border-accent bg-primary/10 dark:border-dark-primary dark:bg-dark-primary/5"
@@ -452,31 +341,19 @@ export default function MatchingWords() {
                   <input
                     type="checkbox"
                     checked={isSelected}
-                    onChange={() => toggleSelect(w.source)}
+                    onChange={() => toggleSelect(word)}
                     className="h-4 w-4 rounded border-base-300 text-primary focus:ring-primary"
                   />
-                  <span className="font-medium text-base-content dark:text-dark-base-content">
-                    {w.source}
-                  </span>
-                  <ArrowRight size={14} className="text-base-content/50" />
-                  <span className="text-base-content/70 dark:text-dark-base-content/50">
-                    {w.target}
+                  <span className="text-base-content dark:text-dark-base-content">
+                    {word}
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => startEdit(realIdx)}
-                    className="rounded p-1 text-base-content/50 hover:bg-base-200 hover:text-primary dark:hover:bg-dark-base-300"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(w.source)}
-                    className="rounded p-1 text-base-content/50 hover:bg-error/10 hover:text-error dark:hover:bg-dark-error/10"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+                <button
+                  onClick={() => handleDelete(word)}
+                  className="rounded p-1 text-base-content/50 hover:bg-error/10 hover:text-error dark:hover:bg-dark-error/10"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             );
           })}
@@ -484,14 +361,14 @@ export default function MatchingWords() {
       )}
 
       <p className="text-xs text-base-content/60 dark:text-dark-base-content/50">
-        {words.length} matching word{words.length !== 1 ? "s" : ""} total
+        {words.length} removal word{words.length !== 1 ? "s" : ""} total
       </p>
 
       {/* Bulk import modal */}
       <Modal
         open={bulkOpen}
         onClose={() => setBulkOpen(false)}
-        title="Bulk Import Matching Words"
+        title="Bulk Import Removal Words"
         actions={
           <>
             <Button variant="secondary" onClick={() => setBulkOpen(false)}>
@@ -505,16 +382,16 @@ export default function MatchingWords() {
       >
         <div className="space-y-3">
           <p className="text-xs text-base-content/60 dark:text-dark-base-content/50">
-            Paste or upload a JSON array. Format:{" "}
+            Paste or upload a JSON array of strings. Format:{" "}
             <code className="rounded bg-base-200 px-1 dark:bg-dark-base-300">
-              {'[{"source": "...", "target": "..."}]'}
+              {'["word1", "word2"]'}
             </code>
           </p>
           <textarea
             value={bulkJson}
             onChange={(e) => setBulkJson(e.target.value)}
             rows={8}
-            placeholder='[{"source": "Tanjiro", "target": "Τανζίρο"}]'
+            placeholder='["damn", "freaking"]'
             className="w-full rounded-lg border border-base-300 px-3 py-2 font-mono text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-primary dark:border-dark-base-300 dark:bg-dark-base-200 dark:text-dark-base-content"
           />
           <input

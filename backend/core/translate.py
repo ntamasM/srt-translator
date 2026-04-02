@@ -27,7 +27,8 @@ class SRTTranslator:
                  replace_credits: bool = True,
                  translator_name: str = "AI",
                  removal_file: Optional[str] = None,
-                 ai_platform: str = "openai"):
+                 ai_platform: str = "openai",
+                 keywords: Optional[List[str]] = None):
         self.client = create_translation_client(
             ai_platform=ai_platform,
             api_key=api_key,
@@ -37,6 +38,7 @@ class SRTTranslator:
             top_k=top_k,
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
+            keywords=keywords,
         )
         self.model = model
         self.ai_platform = ai_platform

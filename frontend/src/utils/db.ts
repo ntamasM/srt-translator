@@ -1,14 +1,13 @@
 /**
- * IndexedDB utility for storing matching words and removal words client-side.
+ * IndexedDB utility for storing settings and translation packages client-side.
  */
 
-import type { MatchingWord, Settings } from "../types/settings";
+import type { Settings, TranslationPackage } from "../types/settings";
 
 const DB_NAME = "srt-translator";
-const DB_VERSION = 3;
-const MATCHING_STORE = "matchingWords";
-const REMOVAL_STORE = "removalWords";
+const DB_VERSION = 4;
 const SETTINGS_STORE = "settings";
+const PACKAGES_STORE = "packages";
 const SETTINGS_KEY = "app_settings";
 
 const DEFAULT_SETTINGS: Settings = {
@@ -28,18 +27,27 @@ const DEFAULT_SETTINGS: Settings = {
   add_credits: true,
   append_credits_at_end: false,
   theme: "system",
+  activePackageId: null,
 };
 
+let _dbPromise: Promise<IDBDatabase> | null = null;
+
 function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
+  if (_dbPromise) return _dbPromise;
+
+  _dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains(MATCHING_STORE)) {
-        db.createObjectStore(MATCHING_STORE, { keyPath: "source" });
+      // Legacy stores — kept so older DBs upgrade without errors
+      if (!db.objectStoreNames.contains("matchingWords")) {
+        db.createObjectStore("matchingWords", { keyPath: "source" });
       }
-      if (!db.objectStoreNames.contains(REMOVAL_STORE)) {
-        db.createObjectStore(REMOVAL_STORE, { keyPath: "word" });
+      if (!db.objectStoreNames.contains("removalWords")) {
+        db.createObjectStore("removalWords", { keyPath: "word" });
+      }
+      if (!db.objectStoreNames.contains(PACKAGES_STORE)) {
+        db.createObjectStore(PACKAGES_STORE, { keyPath: "id" });
       }
       // Recreate settings store with proper keyPath on upgrade
       if (db.objectStoreNames.contains(SETTINGS_STORE)) {
@@ -47,175 +55,24 @@ function openDB(): Promise<IDBDatabase> {
       }
       db.createObjectStore(SETTINGS_STORE, { keyPath: "_key" });
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onblocked = () => {
+      _dbPromise = null;
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      db.onversionchange = () => {
+        db.close();
+        _dbPromise = null;
+      };
+      resolve(db);
+    };
+    req.onerror = () => {
+      _dbPromise = null;
+      reject(req.error);
+    };
   });
-}
 
-// ── Matching words ────────────────────────────────────────────────────────────
-
-export async function getMatchingWords(): Promise<MatchingWord[]> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MATCHING_STORE, "readonly");
-    const store = tx.objectStore(MATCHING_STORE);
-    const req = store.getAll();
-    req.onsuccess = () => resolve(req.result as MatchingWord[]);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-export async function addMatchingWord(
-  source: string,
-  target: string,
-): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MATCHING_STORE, "readwrite");
-    const store = tx.objectStore(MATCHING_STORE);
-    store.put({ source, target });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function removeMatchingWord(source: string): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MATCHING_STORE, "readwrite");
-    const store = tx.objectStore(MATCHING_STORE);
-    store.delete(source);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function updateMatchingWord(
-  oldSource: string,
-  newSource: string,
-  newTarget: string,
-): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MATCHING_STORE, "readwrite");
-    const store = tx.objectStore(MATCHING_STORE);
-    if (oldSource !== newSource) {
-      store.delete(oldSource);
-    }
-    store.put({ source: newSource, target: newTarget });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function clearMatchingWords(): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MATCHING_STORE, "readwrite");
-    tx.objectStore(MATCHING_STORE).clear();
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function removeMatchingWords(sources: string[]): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MATCHING_STORE, "readwrite");
-    const store = tx.objectStore(MATCHING_STORE);
-    for (const source of sources) {
-      store.delete(source);
-    }
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function importMatchingWords(
-  words: MatchingWord[],
-): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(MATCHING_STORE, "readwrite");
-    const store = tx.objectStore(MATCHING_STORE);
-    for (const w of words) {
-      store.put(w);
-    }
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-// ── Removal words ─────────────────────────────────────────────────────────────
-
-export async function getRemovalWords(): Promise<string[]> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(REMOVAL_STORE, "readonly");
-    const store = tx.objectStore(REMOVAL_STORE);
-    const req = store.getAll();
-    req.onsuccess = () =>
-      resolve((req.result as { word: string }[]).map((r) => r.word));
-    req.onerror = () => reject(req.error);
-  });
-}
-
-export async function addRemovalWord(word: string): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(REMOVAL_STORE, "readwrite");
-    tx.objectStore(REMOVAL_STORE).put({ word });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function removeRemovalWord(word: string): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(REMOVAL_STORE, "readwrite");
-    tx.objectStore(REMOVAL_STORE).delete(word);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function importRemovalWords(words: string[]): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(REMOVAL_STORE, "readwrite");
-    const store = tx.objectStore(REMOVAL_STORE);
-    for (const word of words) {
-      store.put({ word });
-    }
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function clearRemovalWords(): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(REMOVAL_STORE, "readwrite");
-    tx.objectStore(REMOVAL_STORE).clear();
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function removeRemovalWords(
-  wordsToDelete: string[],
-): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(REMOVAL_STORE, "readwrite");
-    const store = tx.objectStore(REMOVAL_STORE);
-    for (const word of wordsToDelete) {
-      store.delete(word);
-    }
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+  return _dbPromise;
 }
 
 // ── Settings ──────────────────────────────────────────────────────────────────
@@ -247,6 +104,55 @@ export async function saveSettings(data: Partial<Settings>): Promise<Settings> {
     const store = tx.objectStore(SETTINGS_STORE);
     store.put({ _key: SETTINGS_KEY, ...merged });
     tx.oncomplete = () => resolve(merged);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ── Packages ─────────────────────────────────────────────────────────────────
+
+export async function getPackages(): Promise<TranslationPackage[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PACKAGES_STORE, "readonly");
+    const req = tx.objectStore(PACKAGES_STORE).getAll();
+    req.onsuccess = () => resolve(req.result as TranslationPackage[]);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function getPackage(
+  id: string,
+): Promise<TranslationPackage | undefined> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PACKAGES_STORE, "readonly");
+    const req = tx.objectStore(PACKAGES_STORE).get(id);
+    req.onsuccess = () => resolve(req.result as TranslationPackage | undefined);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function savePackage(pkg: TranslationPackage): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PACKAGES_STORE, "readwrite");
+    tx.objectStore(PACKAGES_STORE).put(pkg);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function deletePackage(id: string): Promise<void> {
+  // If this package is the active one, clear the active selection
+  const settings = await getSettings();
+  if (settings.activePackageId === id) {
+    await saveSettings({ activePackageId: null });
+  }
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(PACKAGES_STORE, "readwrite");
+    tx.objectStore(PACKAGES_STORE).delete(id);
+    tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
 }

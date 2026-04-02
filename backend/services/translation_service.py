@@ -35,6 +35,7 @@ def create_job(
     settings: dict[str, Any] | None = None,
     matching_words: list[dict[str, str]] | None = None,
     removal_words: list[str] | None = None,
+    keywords: list[str] | None = None,
 ) -> str:
     """Create a new translation job and return its ID."""
     job_id = uuid.uuid4().hex[:12]
@@ -45,6 +46,7 @@ def create_job(
         "settings": settings or {},
         "matching_words": matching_words or [],
         "removal_words": removal_words or [],
+        "keywords": keywords or [],
         "progress": {},
         "completed": [],
         "errors": {},
@@ -142,6 +144,7 @@ async def run_translation(
         translator_name=config.get("translator_name") or "AI",
         removal_file=removal_file,
         ai_platform=config.get("ai_platform", "openai"),
+        keywords=job.get("keywords", []),
     )
 
     src_lang = config.get("src_lang", "en")

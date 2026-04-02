@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
   ArrowRightLeft,
@@ -7,6 +8,7 @@ import {
   X,
   Square,
   Download,
+  Package,
 } from "lucide-react";
 import Button from "../components/Button";
 import FileDropZone from "../components/FileDropZone";
@@ -18,8 +20,9 @@ import { useSettings } from "../hooks/useSettings";
 import { useToast } from "../components/Toast";
 import { formatFileSize, overallProgress } from "../utils/helpers";
 import { filesApi } from "../api/filesApi";
-import { getMatchingWords, getRemovalWords, getSettings } from "../utils/db";
+import { getSettings, getPackage } from "../utils/db";
 import { LANGUAGES } from "../utils/constants";
+import type { TranslationPackage } from "../types/settings";
 
 export default function HomePage() {
   const { settings, updateSettings } = useSettings();
@@ -40,14 +43,31 @@ export default function HomePage() {
     reset,
   } = useTranslationContext();
   const { addToast } = useToast();
+  const navigate = useNavigate();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFilename, setPreviewFilename] = useState("");
   const [previewText, setPreviewText] = useState("");
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [activePkg, setActivePkg] = useState<TranslationPackage | null>(null);
 
   useEffect(() => {
     refreshFiles();
   }, [refreshFiles]);
+
+  // Load active package when settings change
+  useEffect(() => {
+    if (!settings?.activePackageId) {
+      setActivePkg(null);
+      return;
+    }
+    getPackage(settings.activePackageId).then((pkg) => {
+      setActivePkg(pkg ?? null);
+      // Clear stale reference if package was deleted
+      if (!pkg && settings.activePackageId) {
+        updateSettings({ activePackageId: null });
+      }
+    });
+  }, [settings?.activePackageId]);
 
   const handleAddFiles = async (newFiles: File[]) => {
     try {
@@ -67,21 +87,25 @@ export default function HomePage() {
   };
 
   const handleStart = async () => {
-    if (files.length === 0 || !settings) return;
+    if (files.length === 0 || !settings || !activePkg) return;
     try {
-      const [matchingWords, removalWords, latestSettings] = await Promise.all([
-        getMatchingWords(),
-        getRemovalWords(),
-        getSettings(),
-      ]);
+      const latestSettings = await getSettings();
+      const matchingWords = activePkg.matchingWords;
+      const removalWords = activePkg.removalWords;
+      const keywords = [
+        ...(activePkg.titleKeyword ? [activePkg.titleKeyword] : []),
+        ...activePkg.keywords,
+      ];
+
       startTranslation(
         files.map((f) => f.name),
         latestSettings,
         matchingWords,
         removalWords,
+        keywords,
       );
     } catch {
-      addToast("error", "Failed to load word lists from local storage");
+      addToast("error", "Failed to load package data");
     }
   };
 
@@ -101,7 +125,8 @@ export default function HomePage() {
   const progressList = Object.values(fileProgress);
   const overallPct = overallProgress(progressList);
 
-  const canStart = files.length > 0 && status === "idle" && settings?.api_key;
+  const canStart =
+    files.length > 0 && status === "idle" && settings?.api_key && !!activePkg;
   const doneFiles = useMemo(
     () =>
       progressList
@@ -185,6 +210,58 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Active package indicator */}
+      {status === "idle" && (
+        <div
+          className={`flex items-center justify-between rounded-lg border px-4 py-2.5 ${
+            activePkg
+              ? "border-primary/30 bg-primary/5 dark:border-dark-primary/30 dark:bg-dark-primary/5"
+              : "border-base-300 bg-base-100 dark:border-dark-base-300 dark:bg-dark-base-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Package
+              size={16}
+              className={
+                activePkg
+                  ? "text-primary dark:text-dark-primary"
+                  : "text-base-content/40 dark:text-dark-base-content/40"
+              }
+            />
+            {activePkg ? (
+              <span className="text-sm font-medium text-base-content dark:text-dark-base-content">
+                {activePkg.name}
+                {activePkg.titleKeyword && (
+                  <span className="ml-1.5 text-xs text-base-content/50 dark:text-dark-base-content/40">
+                    — {activePkg.titleKeyword}
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span className="text-sm text-base-content/50 dark:text-dark-base-content/40">
+                No active package — select one to start translating
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/packages")}
+              className="text-xs font-medium text-primary hover:underline dark:text-dark-primary"
+            >
+              {activePkg ? "Change" : "Select Package"}
+            </button>
+            {activePkg && (
+              <button
+                onClick={() => updateSettings({ activePackageId: null })}
+                className="text-xs text-base-content/50 hover:text-base-content dark:text-dark-base-content/40 dark:hover:text-dark-base-content"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Drop zone (hidden while translating) */}
       {status === "idle" && (
         <>
@@ -234,7 +311,9 @@ export default function HomePage() {
           >
             {!settings?.api_key
               ? "Set API Key in Settings first"
-              : "Start Translation"}
+              : !activePkg
+                ? "Select a Package first"
+                : "Start Translation"}
           </Button>
         </>
       )}
