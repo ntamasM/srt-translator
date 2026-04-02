@@ -80,9 +80,8 @@ export default function ManageData() {
           );
         }
 
-        // Import settings (skip api_key to avoid overwriting credentials)
-        const { api_key, ...importedSettings } = data.settings;
-        await saveSettings(importedSettings);
+        // Import all settings including API key
+        await saveSettings(data.settings);
 
         // Import packages — merge by adding/overwriting
         let importedCount = 0;
@@ -94,7 +93,7 @@ export default function ManageData() {
 
         addToast(
           "success",
-          `Imported settings and ${importedCount} package(s). API key was not overwritten.`,
+          `Imported settings and ${importedCount} package(s).`,
         );
       } catch (err: any) {
         addToast("error", `Import failed: ${err.message}`);
@@ -115,10 +114,10 @@ export default function ManageData() {
         await deletePackage(pkg.id);
       }
 
-      // Reset settings to defaults (keep api_key)
-      const current = await getSettings();
+      // Reset all settings to defaults
       await saveSettings({
         ai_platform: "openai",
+        api_key: "",
         model: "gpt-4o-mini",
         temperature: 0.2,
         top_p: 0.1,
@@ -133,7 +132,6 @@ export default function ManageData() {
         add_credits: true,
         append_credits_at_end: false,
         activePackageId: null,
-        api_key: current.api_key, // preserve API key
       });
 
       setDeleteOpen(false);
@@ -171,8 +169,8 @@ export default function ManageData() {
         </h2>
         <p className="text-sm text-base-content/70 dark:text-dark-base-content/50">
           Restore data from a previously exported JSON file. Existing packages
-          with the same ID will be overwritten. Your API key will not be
-          changed.
+          with the same ID will be overwritten. All settings including the API
+          key will be restored.
         </p>
         <input
           ref={fileInputRef}
@@ -197,9 +195,8 @@ export default function ManageData() {
           Danger Zone
         </h2>
         <p className="text-sm text-base-content/70 dark:text-dark-base-content/50">
-          Permanently delete all translation packages and reset settings to
-          defaults. Your API key will be preserved. This action cannot be
-          undone.
+          Permanently delete all translation packages and reset all settings
+          to defaults. This action cannot be undone.
         </p>
         <Button
           variant="secondary"
@@ -248,8 +245,7 @@ export default function ManageData() {
             />
             <p className="text-sm text-error/90 dark:text-dark-error/90">
               This will permanently delete all your translation packages and
-              reset all settings to their defaults. Your API key will be
-              preserved.
+              reset all settings to their defaults, including your API key.
             </p>
           </div>
           <div>
