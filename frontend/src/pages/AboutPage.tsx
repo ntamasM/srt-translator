@@ -11,6 +11,8 @@ import {
   Download,
   ExternalLink,
   Heart,
+  Package,
+  Database,
 } from "lucide-react";
 import logoIcon from "../../assets/icons/Srt-Translator--icon.svg";
 
@@ -23,9 +25,15 @@ const features = [
   },
   {
     icon: <Languages size={32} className="text-accent" />,
-    title: "Multi-Language Translation",
+    title: "Multi-Platform AI",
     description:
-      "Translate subtitles between many languages powered by OpenAI's language models.",
+      "Translate subtitles using OpenAI, Google Gemini, Anthropic Claude, or DeepSeek — choose the platform that works best for you.",
+  },
+  {
+    icon: <Package size={32} className="text-success" />,
+    title: "Translation Packages",
+    description:
+      "Create per-content packages with keywords, matching words, and removal words. The AI uses these keywords to produce contextually accurate translations.",
   },
   {
     icon: <Zap size={32} className="text-warning" />,
@@ -34,49 +42,61 @@ const features = [
       "Upload multiple files at once and translate them all in a single run with real-time progress tracking.",
   },
   {
-    icon: <Settings size={32} className="text-secondary-content" />,
-    title: "Word Matching & Removal",
+    icon: <Globe size={32} className="text-info" />,
+    title: "70+ Languages",
     description:
-      "Configure custom word matching rules and removal lists to fine-tune your translations.",
+      "Translate between over 70 languages. Configure source and target languages, AI model, and advanced parameters.",
   },
   {
-    icon: <Globe size={32} className="text-info" />,
-    title: "Configurable Settings",
+    icon: <Database size={32} className="text-secondary-content" />,
+    title: "Import & Export",
     description:
-      "Customize source & target languages, model selection, and advanced translation parameters.",
+      "Export and import packages as JSON files. Back up your entire configuration or share packages between devices.",
+  },
+  {
+    icon: <Settings size={32} className="text-secondary" />,
+    title: "Smart Word Handling",
+    description:
+      "Matching words protect terms during translation and replace them in the output. Removal words strip unwanted text before the AI sees it.",
   },
   {
     icon: <Clapperboard size={32} className="text-error" />,
     title: "File Management",
     description:
-      "Browse previously translated files, download results, and manage your subtitle library.",
+      "Browse previously translated files, preview results, download individually or in bulk, with automatic cleanup after 7 days.",
   },
 ];
 
 const steps = [
   {
+    icon: <Package size={20} />,
+    title: "Create a Package",
+    description:
+      "Create a translation package for the movie or series you want to translate. Add a title keyword, context tags, matching words, and removal words.",
+  },
+  {
     icon: <Settings size={20} />,
     title: "Configure Settings",
     description:
-      "Set your source and target languages, choose an OpenAI model, and adjust translation options.",
+      "Choose your AI platform and model, set source and target languages, and adjust translation parameters.",
   },
   {
     icon: <Upload size={20} />,
     title: "Upload Subtitles",
     description:
-      "Drag & drop or browse to upload one or more .srt subtitle files.",
+      "Drag & drop or browse to upload one or more .srt subtitle files. Set your package as active.",
   },
   {
     icon: <Play size={20} />,
     title: "Start Translation",
     description:
-      "Hit translate and watch real-time progress as each file is processed.",
+      "Hit translate and watch real-time progress as each file is processed with your package's context.",
   },
   {
     icon: <Download size={20} />,
     title: "Download Results",
     description:
-      "Download translated subtitle files individually or all at once as a zip archive.",
+      "Download translated subtitle files individually or all at once.",
   },
 ];
 
@@ -85,8 +105,8 @@ const techStack = [
   { icon: "⚡", text: "Vite 7" },
   { icon: "🎨", text: "Tailwind CSS 4" },
   { icon: "🐍", text: "FastAPI (Python)" },
-  { icon: "🤖", text: "OpenAI API" },
-  { icon: "💾", text: "IndexedDB (local settings)" },
+  { icon: "🤖", text: "Multi-AI (OpenAI, Gemini, Claude, DeepSeek)" },
+  { icon: "💾", text: "IndexedDB (local storage)" },
 ];
 
 export default function AboutPage() {
@@ -105,7 +125,7 @@ export default function AboutPage() {
           </h1>
         </div>
         <p className="text-lg text-base-content/70 md:text-xl dark:text-dark-base-content/50">
-          A modern subtitle translation tool powered by OpenAI
+          A modern subtitle translation tool powered by AI
         </p>
       </div>
 
