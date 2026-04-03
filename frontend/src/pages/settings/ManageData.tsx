@@ -196,8 +196,8 @@ export default function ManageData() {
           Danger Zone
         </h2>
         <p className="text-sm text-base-content/70 dark:text-dark-base-content/50">
-          Permanently delete all translation packages and reset all settings
-          to defaults. This action cannot be undone.
+          Permanently delete all translation packages and reset all settings to
+          defaults. This action cannot be undone.
         </p>
         <Button
           variant="secondary"
@@ -231,7 +231,7 @@ export default function ManageData() {
             <Button
               onClick={handleDeleteAll}
               disabled={deleteConfirmText !== "DELETE"}
-              className="!bg-error !text-white hover:!bg-error/90 disabled:!bg-error/40"
+              className="bg-error! text-white! hover:bg-error/90! disabled:bg-error/40!"
             >
               Delete Everything
             </Button>
