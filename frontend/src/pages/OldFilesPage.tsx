@@ -9,20 +9,20 @@ import {
   Eye,
 } from "lucide-react";
 import { filesApi } from "../api/filesApi";
+import { configApi } from "../api/configApi";
 import { useToast } from "../components/Toast";
-import { formatFileSize } from "../utils/helpers";
+import { formatFileSize, formatDateTime } from "../utils/helpers";
+import { useSettings } from "../hooks/useSettings";
 import type { FileInfo } from "../types/files";
 import Modal from "../components/Modal";
 
 type Tab = "uploaded" | "translated";
 
-const MAX_AGE_DAYS = 7;
-
-function daysUntilDeletion(modified: string): number {
+function daysUntilDeletion(modified: string, maxAgeDays: number): number {
   const modifiedDate = new Date(modified).getTime();
   const now = Date.now();
   const elapsed = now - modifiedDate;
-  const remaining = MAX_AGE_DAYS - elapsed / (1000 * 60 * 60 * 24);
+  const remaining = maxAgeDays - elapsed / (1000 * 60 * 60 * 24);
   return Math.max(0, Math.ceil(remaining));
 }
 
@@ -31,21 +31,25 @@ export default function OldFilesPage() {
   const [uploaded, setUploaded] = useState<FileInfo[]>([]);
   const [translated, setTranslated] = useState<FileInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [maxAgeDays, setMaxAgeDays] = useState(7);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFilename, setPreviewFilename] = useState("");
   const [previewText, setPreviewText] = useState("");
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const { addToast } = useToast();
+  const { settings } = useSettings();
 
   const refresh = async () => {
     setLoading(true);
     try {
-      const [u, t] = await Promise.all([
+      const [u, t, cfg] = await Promise.all([
         filesApi.listFiles(),
         filesApi.listTranslated(),
+        configApi.getConfig(),
       ]);
       setUploaded(u);
       setTranslated(t);
+      setMaxAgeDays(cfg.file_max_age_days);
     } catch (err: any) {
       addToast("error", err.message || "Failed to load files");
     } finally {
@@ -158,7 +162,7 @@ export default function OldFilesPage() {
 
       {/* Retention notice */}
       <p className="text-xs text-base-content/50 dark:text-dark-base-content/50">
-        Files older than 7 days are automatically deleted.
+        Files older than {maxAgeDays} days are automatically deleted.
       </p>
 
       {/* File list */}
@@ -188,12 +192,12 @@ export default function OldFilesPage() {
                 </p>
                 <p className="text-xs text-base-content/60 dark:text-dark-base-content/50">
                   {formatFileSize(f.size)} ·{" "}
-                  {new Date(f.modified).toLocaleString()}
+                  {formatDateTime(f.modified, settings?.date_format)}
                 </p>
               </div>
               <div className="ml-4 flex items-center gap-2">
                 {(() => {
-                  const days = daysUntilDeletion(f.modified);
+                  const days = daysUntilDeletion(f.modified, maxAgeDays);
                   return (
                     <span
                       className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${

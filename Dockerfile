@@ -21,6 +21,8 @@ WORKDIR /app/backend
 COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+ENV SRT_ENV=production
+
 COPY backend/ ./
 COPY --from=frontend-build /build/frontend/dist /app/frontend/dist
 

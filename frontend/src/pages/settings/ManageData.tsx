@@ -131,6 +131,7 @@ export default function ManageData() {
         replace_credits: true,
         add_credits: true,
         append_credits_at_end: false,
+        date_format: "system",
         activePackageId: null,
       });
 

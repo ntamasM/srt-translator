@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Globe,
   Zap,
@@ -15,6 +15,7 @@ import {
   Database,
 } from "lucide-react";
 import logoIcon from "../../assets/icons/Srt-Translator--icon.svg";
+import { configApi } from "../api/configApi";
 
 const features = [
   {
@@ -62,8 +63,7 @@ const features = [
   {
     icon: <Clapperboard size={32} className="text-error" />,
     title: "File Management",
-    description:
-      "Browse previously translated files, preview results, download individually or in bulk, with automatic cleanup after 7 days.",
+    description: "",  // filled dynamically
   },
 ];
 
@@ -110,6 +110,22 @@ const techStack = [
 ];
 
 export default function AboutPage() {
+  const [maxAgeDays, setMaxAgeDays] = useState(7);
+
+  useEffect(() => {
+    configApi.getConfig().then((cfg) => setMaxAgeDays(cfg.file_max_age_days));
+  }, []);
+
+  // Update the File Management description with the dynamic value
+  const resolvedFeatures = features.map((f) =>
+    f.title === "File Management"
+      ? {
+          ...f,
+          description: `Browse previously translated files, preview results, download individually or in bulk, with automatic cleanup after ${maxAgeDays} days.`,
+        }
+      : f,
+  );
+
   return (
     <div className="mx-auto max-w-5xl space-y-12">
       {/* Header */}
@@ -159,7 +175,7 @@ export default function AboutPage() {
           Key Features
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature, index) => (
+          {resolvedFeatures.map((feature, index) => (
             <div
               key={index}
               className="rounded-xl border border-base-300 bg-base-100 p-5 transition-shadow hover:shadow-lg dark:border-dark-base-300 dark:bg-dark-base-100"

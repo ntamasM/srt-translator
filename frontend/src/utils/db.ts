@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS: Settings = {
   add_credits: true,
   append_credits_at_end: false,
   theme: "system",
+  date_format: "system",
   activePackageId: null,
 };
 

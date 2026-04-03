@@ -1,8 +1,11 @@
 """Word removal functionality for SRT files."""
 
+import logging
 import os
 from typing import List, Set
 import re
+
+log = logging.getLogger(__name__)
 
 
 class WordRemover:
@@ -30,9 +33,9 @@ class WordRemover:
                 words = f.read().strip().split('\n')
                 # Clean and filter empty lines
                 self.removal_words = {word.strip() for word in words if word.strip()}
-            print(f"Loaded {len(self.removal_words)} words for removal from {file_path}")
+            log.info("Loaded %d words for removal from %s", len(self.removal_words), file_path)
         except Exception as e:
-            print(f"Warning: Failed to load removal words from {file_path}: {e}")
+            log.warning("Failed to load removal words from %s: %s", file_path, e)
     
     def remove_words_from_text(self, text: str) -> str:
         """Remove specified words from text completely.

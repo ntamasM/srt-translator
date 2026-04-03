@@ -1,7 +1,10 @@
 """Placeholder management for protecting tags and matching terms during translation."""
 
+import logging
 import re
 from typing import Dict, List, Set, Tuple
+
+log = logging.getLogger(__name__)
 
 
 class PlaceholderManager:
@@ -264,10 +267,10 @@ def load_matching_file(filepath: str) -> List[str]:
                         terms.append(term)
             return terms
     except FileNotFoundError:
-        print(f"Warning: Matching file not found: {filepath}")
+        log.warning("Matching file not found: %s", filepath)
         return []
     except Exception as e:
-        print(f"Warning: Error reading matching file {filepath}: {e}")
+        log.warning("Error reading matching file %s: %s", filepath, e)
         return []
 
 
@@ -296,16 +299,16 @@ def load_replacement_mapping(filepath: str) -> Dict[str, str]:
                         if source and target:
                             replacements[source] = target
                     else:
-                        print(f"Warning: Invalid format in {filepath} line {line_num}: {line}")
+                        log.warning("Invalid format in %s line %d: %s", filepath, line_num, line)
                 else:
-                    print(f"Warning: No '-->' found in {filepath} line {line_num}: {line}")
-        
-        print(f"Loaded {len(replacements)} replacement mappings from {filepath}")
+                    log.warning("No '-->' found in %s line %d: %s", filepath, line_num, line)
+
+        log.info("Loaded %d replacement mappings from %s", len(replacements), filepath)
         return replacements
-        
+
     except FileNotFoundError:
-        print(f"Warning: Replacement file not found: {filepath}")
+        log.warning("Replacement file not found: %s", filepath)
         return {}
     except Exception as e:
-        print(f"Warning: Error reading replacement file {filepath}: {e}")
+        log.warning("Error reading replacement file %s: %s", filepath, e)
         return {}

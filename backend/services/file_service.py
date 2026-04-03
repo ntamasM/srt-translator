@@ -2,22 +2,18 @@
 
 import logging
 import re
-import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import BinaryIO
 
-from config import DATA_DIR
+from config import settings
 
 log = logging.getLogger(__name__)
 
-MAX_AGE_DAYS = 7
-
-
-SUBTITLES_DIR = DATA_DIR / "subtitles"
-TRANSLATED_DIR = DATA_DIR / "translated"
+SUBTITLES_DIR = settings.data_dir / "subtitles"
+TRANSLATED_DIR = settings.data_dir / "translated"
 
 _SESSION_RE = re.compile(r"^[a-f0-9]{32}$")
+_FILENAME_BAD = re.compile(r"[\x00/\\]|\.{2,}")
 
 
 def _validate_session(session_id: str) -> str:
@@ -25,6 +21,19 @@ def _validate_session(session_id: str) -> str:
     if not _SESSION_RE.match(session_id):
         raise ValueError("Invalid session ID")
     return session_id
+
+
+def _sanitize_filename(filename: str) -> str:
+    """Validate and sanitize a filename to prevent path traversal and injection."""
+    if not filename or len(filename) > 255:
+        raise ValueError("Invalid filename length")
+    if _FILENAME_BAD.search(filename):
+        raise ValueError(f"Invalid filename: {filename}")
+    # Use only the basename (strip any directory components)
+    name = Path(filename).name
+    if not name:
+        raise ValueError("Empty filename")
+    return name
 
 
 def _session_subtitles(session_id: str) -> Path:
@@ -50,7 +59,8 @@ def _file_info(path: Path) -> dict:
 
 def save_uploaded_file(session_id: str, filename: str, content: bytes) -> dict:
     """Save an uploaded file to data/subtitles/{session_id}/ and return file info."""
-    dest = _session_subtitles(session_id) / filename
+    safe_name = _sanitize_filename(filename)
+    dest = _session_subtitles(session_id) / safe_name
     dest.write_bytes(content)
     return _file_info(dest)
 
@@ -64,13 +74,15 @@ def list_uploaded_files(session_id: str) -> list[dict]:
 
 def get_translated_file_path(session_id: str, filename: str) -> Path | None:
     """Return the path to a translated file, or None if it doesn't exist."""
-    path = _session_translated(session_id) / filename
+    safe_name = _sanitize_filename(filename)
+    path = _session_translated(session_id) / safe_name
     return path if path.exists() else None
 
 
 def delete_file(session_id: str, filename: str) -> bool:
     """Delete a file from data/subtitles/{session_id}/. Returns True if deleted."""
-    path = _session_subtitles(session_id) / filename
+    safe_name = _sanitize_filename(filename)
+    path = _session_subtitles(session_id) / safe_name
     if path.exists():
         path.unlink()
         return True
@@ -79,7 +91,8 @@ def delete_file(session_id: str, filename: str) -> bool:
 
 def delete_translated_file(session_id: str, filename: str) -> bool:
     """Delete a file from data/translated/{session_id}/. Returns True if deleted."""
-    path = _session_translated(session_id) / filename
+    safe_name = _sanitize_filename(filename)
+    path = _session_translated(session_id) / safe_name
     if path.exists():
         path.unlink()
         return True
@@ -94,15 +107,16 @@ def list_translated_files(session_id: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Cleanup — delete files older than MAX_AGE_DAYS
+# Cleanup — delete files older than file_max_age_days
 # ---------------------------------------------------------------------------
 
 def cleanup_old_files() -> int:
-    """Delete files older than MAX_AGE_DAYS across all sessions.
+    """Delete files older than the configured max age across all sessions.
 
     Also removes empty session directories. Returns the number of files deleted.
     """
-    cutoff = datetime.now(tz=timezone.utc) - timedelta(days=MAX_AGE_DAYS)
+    max_age_days = settings.file_max_age_days
+    cutoff = datetime.now(tz=timezone.utc) - timedelta(days=max_age_days)
     deleted = 0
 
     for base_dir in (SUBTITLES_DIR, TRANSLATED_DIR):
@@ -125,5 +139,5 @@ def cleanup_old_files() -> int:
                 pass  # directory not empty, that's fine
 
     if deleted:
-        log.info("Cleanup: deleted %d file(s) older than %d days", deleted, MAX_AGE_DAYS)
+        log.info("Cleanup: deleted %d file(s) older than %d days", deleted, max_age_days)
     return deleted

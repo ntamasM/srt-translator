@@ -1,12 +1,15 @@
 """OpenAI client wrapper for structured SRT translation."""
 
 import json
+import logging
 import random
 import time
 from typing import Callable, Dict, List, Optional, Any
 
 import openai
 from openai import OpenAI
+
+log = logging.getLogger(__name__)
 
 
 class OpenAITranslationClient:
@@ -142,7 +145,7 @@ class OpenAITranslationClient:
         except InterruptedError:
             raise
         except Exception as e:
-            print(f"Batch translation failed: {e}")
+            log.warning("Batch translation failed: %s", e)
 
         # Second attempt: translate with explicit indexing
         try:
@@ -154,7 +157,7 @@ class OpenAITranslationClient:
         except InterruptedError:
             raise
         except Exception as e:
-            print(f"Indexed translation failed: {e}")
+            log.warning("Indexed translation failed: %s", e)
 
         # Fallback: translate line by line
         return self._translate_line_by_line(lines, src_lang, tgt_lang, max_retries, cancel_check)

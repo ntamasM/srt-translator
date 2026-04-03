@@ -1,5 +1,7 @@
 export type Theme = "light" | "dark" | "system";
 
+export type DateFormat = "system" | "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD";
+
 export interface Settings {
   ai_platform: string;
   api_key: string;
@@ -17,6 +19,7 @@ export interface Settings {
   add_credits: boolean;
   append_credits_at_end: boolean;
   theme: Theme;
+  date_format: DateFormat;
   activePackageId: string | null;
 }
 

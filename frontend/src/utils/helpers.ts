@@ -8,6 +8,33 @@ export function formatFileSize(bytes: number): string {
 }
 
 /**
+ * Format a date/time string or timestamp according to the chosen date format.
+ */
+export function formatDateTime(
+  value: string | number,
+  dateFormat: string = "system",
+): string {
+  const d = new Date(value);
+  if (dateFormat === "system") return d.toLocaleString();
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const time = d.toLocaleTimeString();
+
+  switch (dateFormat) {
+    case "DD/MM/YYYY":
+      return `${day}/${month}/${year}, ${time}`;
+    case "MM/DD/YYYY":
+      return `${month}/${day}/${year}, ${time}`;
+    case "YYYY-MM-DD":
+      return `${year}-${month}-${day}, ${time}`;
+    default:
+      return d.toLocaleString();
+  }
+}
+
+/**
  * Calculate overall progress percentage from per-file progress.
  *
  * Files whose cue count isn't known yet (total === 0) are estimated

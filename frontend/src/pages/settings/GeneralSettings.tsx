@@ -12,7 +12,7 @@ import {
   LANGUAGES,
   PLATFORM_PARAMS,
 } from "../../utils/constants";
-import type { Settings } from "../../types/settings";
+import type { DateFormat, Settings } from "../../types/settings";
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -105,6 +105,37 @@ export default function GeneralSettings() {
           </div>
           <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
             Choose light, dark, or follow your operating system preference.
+          </p>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-base-content/80 dark:text-dark-base-content">
+            Date Format
+          </label>
+          <div className="inline-flex gap-1 rounded-lg bg-base-200 p-1 dark:bg-dark-base-200">
+            {(
+              [
+                { value: "system", label: "System" },
+                { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
+                { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
+                { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleChange("date_format", opt.value)}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  (form.date_format || "system") === opt.value
+                    ? "bg-base-100 text-primary shadow-sm dark:bg-dark-base-300 dark:text-dark-primary"
+                    : "text-base-content/60 hover:text-base-content dark:text-dark-base-content/50 dark:hover:text-dark-base-content"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-base-content/60 dark:text-dark-base-content/50">
+            Choose how dates are displayed throughout the app.
           </p>
         </div>
 

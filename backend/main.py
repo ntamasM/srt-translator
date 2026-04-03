@@ -2,36 +2,37 @@
 
 import asyncio
 import logging
-import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.requests import Request
 
-from routers import files, translation
-from config import ensure_dirs
+from config import settings, ensure_dirs
+from logging_config import setup_logging
+from middleware.rate_limit import limiter
+from middleware.security_headers import SecurityHeadersMiddleware
+from middleware.session import SessionCookieMiddleware
+from routers import files, health, translation
 from services.file_service import cleanup_old_files
 
 log = logging.getLogger(__name__)
-
-# Ensure data directories exist at startup
-ensure_dirs()
-
-CLEANUP_INTERVAL_HOURS = 1
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Run cleanup on startup and periodically in the background."""
-    # Initial cleanup
+    setup_logging()
+    ensure_dirs()
     cleanup_old_files()
 
     async def _periodic_cleanup():
         while True:
-            await asyncio.sleep(CLEANUP_INTERVAL_HOURS * 3600)
+            await asyncio.sleep(settings.cleanup_interval_hours * 3600)
             try:
                 cleanup_old_files()
             except Exception:
@@ -42,64 +43,63 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="SRT Translator API", version="1.0.0", lifespan=lifespan)
+def create_app() -> FastAPI:
+    """Application factory — creates and configures the FastAPI app."""
+    app = FastAPI(title="SRT Translator API", version="1.0.0", lifespan=lifespan)
 
-# CORS — allow all origins (API keys are stored client-side, no server secrets)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    # ── Rate limiter state ───────────────────────────────────────────────
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+    # ── Middleware (last added = first executed) ─────────────────────────
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(SessionCookieMiddleware)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.resolved_cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-# ---------------------------------------------------------------------------
-# Session middleware — assigns each browser a persistent UUID via cookie.
-# This is used to isolate file uploads / downloads per user.
-# ---------------------------------------------------------------------------
-class SessionCookieMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        session_id = request.cookies.get("session_id")
-        if not session_id:
-            session_id = uuid.uuid4().hex
-        request.state.session_id = session_id
-        response = await call_next(request)
-        # Always set / refresh the cookie (30-day expiry)
-        response.set_cookie(
-            key="session_id",
-            value=session_id,
-            httponly=True,
-            samesite="lax",
-            max_age=30 * 24 * 60 * 60,
-        )
-        return response
+    # ── Error handlers ───────────────────────────────────────────────────
+    @app.exception_handler(ValueError)
+    async def value_error_handler(request: Request, exc: ValueError):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
 
+    @app.exception_handler(FileNotFoundError)
+    async def file_not_found_handler(request: Request, exc: FileNotFoundError):
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
 
-app.add_middleware(SessionCookieMiddleware)
+    # ── Routers ──────────────────────────────────────────────────────────
+    app.include_router(health.router)
+    app.include_router(files.router)
+    app.include_router(translation.router)
 
-# Mount routers
-app.include_router(files.router)
-app.include_router(translation.router)
+    # ── SPA fallback (production) ────────────────────────────────────────
+    _mount_spa(app)
+
+    return app
 
 
-@app.get("/api/health")
-def health():
-    return {"status": "ok"}
+def _mount_spa(app: FastAPI) -> None:
+    """Serve frontend build if available — must be registered last (catch-all)."""
+    frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+    if not frontend_dist.exists():
+        return
 
-
-# Serve frontend build (production) if available — MUST be last (catch-all)
-_frontend_dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
-if _frontend_dist.exists():
     from fastapi.responses import FileResponse
     from starlette.staticfiles import StaticFiles
 
-    app.mount("/assets", StaticFiles(directory=str(_frontend_dist / "assets")), name="assets")
+    app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="assets")
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
         """SPA fallback: serve the file if it exists, otherwise return index.html."""
-        file_path = _frontend_dist / full_path
+        file_path = frontend_dist / full_path
         if file_path.is_file():
             return FileResponse(str(file_path))
-        return FileResponse(str(_frontend_dist / "index.html"))
+        return FileResponse(str(frontend_dist / "index.html"))
+
+
+app = create_app()

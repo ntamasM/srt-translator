@@ -1,5 +1,6 @@
 """Main translation logic for SRT files."""
 
+import logging
 import os
 import hashlib
 import threading
@@ -7,6 +8,8 @@ import srt
 from pathlib import Path
 from typing import Callable, List, Optional
 from tqdm import tqdm
+
+log = logging.getLogger(__name__)
 
 from .client_factory import create_translation_client
 from .placeholders import PlaceholderManager, load_matching_file, load_replacement_mapping
@@ -146,7 +149,7 @@ class SRTTranslator:
         if not subtitles:
             raise Exception(f"No subtitles found in {input_path}")
         
-        print(f"Translating {len(subtitles)} cues from {src_lang} to {tgt_lang}...")
+        log.info("Translating %d cues from %s to %s", len(subtitles), src_lang, tgt_lang)
         
         # Translate each subtitle
         translated_subtitles = []
@@ -177,7 +180,7 @@ class SRTTranslator:
         except Exception as e:
             raise Exception(f"Failed to write output file {output_path}: {e}")
         
-        print(f"Translation completed: {output_path}")
+        log.info("Translation completed: %s", output_path)
     
     def translate_directory(self, input_dir: str, output_dir: str,
                            src_lang: str, tgt_lang: str,
@@ -202,10 +205,10 @@ class SRTTranslator:
         # Find all SRT files
         srt_files = list(input_path.glob("*.srt"))
         if not srt_files:
-            print(f"No SRT files found in {input_dir}")
+            log.info("No SRT files found in %s", input_dir)
             return
-        
-        print(f"Found {len(srt_files)} SRT files to translate")
+
+        log.info("Found %d SRT files to translate", len(srt_files))
         
         # Create output directory
         output_path.mkdir(parents=True, exist_ok=True)
@@ -215,14 +218,14 @@ class SRTTranslator:
             input_file_path = str(srt_file)
             output_file_path = str(output_path / srt_file.name)
             
-            print(f"\nProcessing: {srt_file.name}")
+            log.info("Processing: %s", srt_file.name)
             try:
                 self.translate_file(
                     input_file_path, output_file_path, 
                     src_lang, tgt_lang, add_credits, append_credits_at_end
                 )
             except Exception as e:
-                print(f"Error processing {srt_file.name}: {e}")
+                log.error("Error processing %s: %s", srt_file.name, e)
                 continue
     
     def translate_subtitle(self, subtitle: srt.Subtitle, src_lang: str, tgt_lang: str) -> srt.Subtitle:
@@ -477,9 +480,9 @@ class SRTTranslator:
                 subtitle.index = i
 
             minutes = credit_start.total_seconds() / 60
-            print(f"Credits inserted at {minutes:.1f}min (in {gap_seconds:.1f}s gap after subtitle {insert_after_index})")
+            log.info("Credits inserted at %.1fmin (in %.1fs gap after subtitle %s)", minutes, gap_seconds, insert_after_index)
             return result
         else:
             credits_subtitle = self._create_watermark_cue(subtitles)
-            print("Credits appended at the end (no suitable gap found)")
+            log.info("Credits appended at the end (no suitable gap found)")
             return subtitles + [credits_subtitle]

@@ -1,11 +1,14 @@
 """Anthropic Claude client wrapper for structured SRT translation."""
 
 import json
+import logging
 import random
 import time
 from typing import Callable, Dict, List, Optional, Any
 
 import anthropic
+
+log = logging.getLogger(__name__)
 
 
 class ClaudeTranslationClient:
@@ -54,7 +57,7 @@ class ClaudeTranslationClient:
         except InterruptedError:
             raise
         except Exception as e:
-            print(f"Batch translation failed: {e}")
+            log.warning("Batch translation failed: %s", e)
 
         # Second attempt: indexed
         try:
@@ -66,7 +69,7 @@ class ClaudeTranslationClient:
         except InterruptedError:
             raise
         except Exception as e:
-            print(f"Indexed translation failed: {e}")
+            log.warning("Indexed translation failed: %s", e)
 
         # Fallback: line-by-line
         return self._translate_line_by_line(lines, src_lang, tgt_lang, max_retries, cancel_check)
