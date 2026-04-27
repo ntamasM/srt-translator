@@ -25,6 +25,7 @@ A full-stack web app for translating SubRip (.srt) subtitle files using OpenAI, 
   - [🗑️ Word Removal](#️-word-removal)
   - [📝 Smart Credits Management](#-smart-credits-management)
   - [🔄 Processing Order](#-processing-order)
+  - [✨ Suggestion Packages](#-suggestion-packages)
   - [🧹 Automatic File Cleanup](#-automatic-file-cleanup)
 - [🌐 Deployment (Coolify)](#-deployment-coolify)
 - [☕ Support the Project](#-support-the-project)
@@ -43,6 +44,7 @@ A full-stack web app for translating SubRip (.srt) subtitle files using OpenAI, 
 - **Word Removal**: Remove unwanted words/patterns from translations
 - **Smart Credits Management**: Automatically detects, replaces, and inserts translator credits at optimal locations
 - **Bulk Edit/Delete**: Batch operations for matching words and removal words management
+- **Suggestion Packages**: Browse a curated catalog of ready-made translation packages (Anime, Action, Sci-Fi, etc.), filter by multiple categories at once, and import them in one click — no manual setup needed
 - **Old Files Browser**: View previously uploaded and translated files with download/delete actions
 - **Automatic Cleanup**: Files older than 7 days are automatically deleted; each file shows days remaining
 
@@ -54,7 +56,7 @@ A full-stack web app for translating SubRip (.srt) subtitle files using OpenAI, 
 │                                                     │
 │  IndexedDB ─── settings, matching words,            │
 │                 removal words (per-browser)          │
-│  Pages ──────── Home (translate), Old Files, Settings │
+│  Pages ──────── Home, Old Files, Packages, Suggestions, Settings │
 │  Context ────── TranslationContext (global state)    │
 └──────────────────────┬──────────────────────────────┘
                        │  /api/*  REST + /ws/* WebSocket
@@ -84,7 +86,9 @@ srt-translator/
 │   │   └── word_removal.py     # Word removal logic
 │   ├── routers/
 │   │   ├── files.py            # Upload, list, download, delete
-│   │   └── translation.py     # Translate + WebSocket progress
+│   │   ├── translation.py      # Translate + WebSocket progress
+│   │   └── suggestion_packages.py  # Read-only catalog of curated packages
+│   ├── suggestion-packages/    # Curated translation packages shipped with the app (.json)
 │   ├── schemas/
 │   │   ├── files.py            # FileInfo, UploadResponse models
 │   │   └── translation.py     # TranslationRequest, Settings models
@@ -100,9 +104,11 @@ srt-translator/
 │       │   └── TranslationContext.tsx  # Global translation state
 │       ├── hooks/              # useSettings, useFileUpload
 │       ├── pages/
-│       │   ├── HomePage.tsx    # Main translate page
-│       │   ├── OldFilesPage.tsx # Browse uploaded/translated files
-│       │   └── settings/       # General, MatchingWords, RemoveWords
+│       │   ├── HomePage.tsx              # Main translate page
+│       │   ├── OldFilesPage.tsx          # Browse uploaded/translated files
+│       │   ├── PackagesPage.tsx          # User's translation packages (CRUD + import/export)
+│       │   ├── SuggestionPackagesPage.tsx # Curated catalog with multi-category filter
+│       │   └── settings/                  # General, MatchingWords, RemoveWords
 │       ├── types/              # TypeScript type definitions
 │       └── utils/
 │           ├── constants.ts    # API URLs, AI platform options
@@ -238,6 +244,30 @@ Translation progress is managed by a global React Context (`TranslationContext`)
 - You can navigate to Settings while a translation is running
 - Progress bars, completed files, and download links persist when you return
 - The WebSocket connection stays alive across page changes
+
+### ✨ Suggestion Packages
+
+The **Suggestions** page browses curated translation packages shipped with the app. Each one is a JSON file in `backend/suggestion-packages/` with the following shape:
+
+```json
+{
+  "name": "John Wick",
+  "categories": ["Action", "Crime", "Thriller"],
+  "titleKeyword": "john wick",
+  "keywords": ["assassin", "underworld", "hitman"],
+  "matchingWords": [
+    { "source": "High Table", "target": "Υψηλή Τράπεζα" }
+  ],
+  "removalWords": ["[gunshot]", "[grunting]"]
+}
+```
+
+- `categories` is an array — a package can belong to multiple buckets (e.g. *The Expanse* is both **Sci-Fi** and **Drama**).
+- The Suggestions page builds the filter chips from the union of every JSON's categories. Selecting multiple chips uses **AND** logic — packages must carry every selected category to remain visible.
+- Importing a suggestion creates a fresh entry in the user's IndexedDB-backed `Packages` collection with a new ID and timestamp; subsequent edits stay local to that browser.
+- Suggestion packages are baked into the Docker image (under `backend/`), separate from the `data/` volume that holds user uploads — so adding a new suggestion via git push deploys cleanly without touching production user data.
+
+To add a new suggestion: drop a JSON into `backend/suggestion-packages/`, commit, and redeploy.
 
 ### 🧹 Automatic File Cleanup
 

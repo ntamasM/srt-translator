@@ -13,6 +13,7 @@ import {
   Heart,
   Package,
   Database,
+  Sparkles,
 } from "lucide-react";
 import logoIcon from "../../assets/icons/Srt-Translator--icon.svg";
 import { configApi } from "../api/configApi";
@@ -35,6 +36,12 @@ const features = [
     title: "Translation Packages",
     description:
       "Create per-content packages with keywords, matching words, and removal words. The AI uses these keywords to produce contextually accurate translations.",
+  },
+  {
+    icon: <Sparkles size={32} className="text-primary" />,
+    title: "Suggestion Packages",
+    description:
+      "Browse a curated catalog of ready-made translation packages for popular movies and series. Filter by multiple categories at once and import the ones you need with one click.",
   },
   {
     icon: <Zap size={32} className="text-warning" />,
@@ -70,9 +77,9 @@ const features = [
 const steps = [
   {
     icon: <Package size={20} />,
-    title: "Create a Package",
+    title: "Create or Import a Package",
     description:
-      "Create a translation package for the movie or series you want to translate. Add a title keyword, context tags, matching words, and removal words.",
+      "Build a translation package for the movie or series you want to translate — title keyword, context tags, matching words, and removal words. Or browse the Suggestions catalog and import a curated package in one click.",
   },
   {
     icon: <Settings size={20} />,
