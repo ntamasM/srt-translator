@@ -12,8 +12,26 @@ A full-stack web app for translating SubRip (.srt) subtitle files using OpenAI, 
 
 ---
 
+## 🌍 Try It Live
+
+> **🎬 Skip the setup — try the real app right now:**
+>
+> ### 👉 **[https://srt-translator.nt-sites.gr/](https://srt-translator.nt-sites.gr/)** 👈
+>
+> Bring your own API key (OpenAI, Gemini, Claude, or DeepSeek), upload an `.srt` file, and watch it translate in real time.
+> Your key and settings are stored **only in your browser** — nothing sensitive ever reaches the server.
+
+<div align="center">
+
+[![Live Demo](https://img.shields.io/badge/🚀-Try%20Live%20Demo-brightgreen?style=for-the-badge)](https://srt-translator.nt-sites.gr/)
+
+</div>
+
+---
+
 ## 📋 Table of Contents
 
+- [🌍 Try It Live](#-try-it-live)
 - [🚀 Key Features](#-key-features)
 - [🏗️ Architecture](#️-architecture)
 - [⚙️ Installation & Setup](#️-installation--setup)
