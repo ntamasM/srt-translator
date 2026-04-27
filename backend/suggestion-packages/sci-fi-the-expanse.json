@@ -1,0 +1,21 @@
+{
+  "name": "The Expanse",
+  "categories": ["Sci-Fi"],
+  "titleKeyword": "The Expanse",
+  "keywords": [
+    "Belters",
+    "Inners",
+    "Rocinante",
+    "protomolecule",
+    "OPA",
+    "Ceres"
+  ],
+  "matchingWords": [
+    { "source": "Belter", "target": "Belter" },
+    { "source": "Inner", "target": "Inner" },
+    { "source": "Protomolecule", "target": "Πρωτομόριο" },
+    { "source": "Rocinante", "target": "Rocinante" },
+    { "source": "OPA", "target": "OPA" }
+  ],
+  "removalWords": ["um", "uh", "you know"]
+}

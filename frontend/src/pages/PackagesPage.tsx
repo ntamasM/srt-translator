@@ -20,6 +20,7 @@ import Modal from "../components/Modal";
 import { useToast } from "../components/Toast";
 import { useSettings } from "../hooks/useSettings";
 import { getPackages, savePackage, deletePackage } from "../utils/db";
+import { importPackages } from "../utils/importPackages";
 import type { TranslationPackage } from "../types/settings";
 
 export default function PackagesPage() {
@@ -164,52 +165,18 @@ export default function PackagesPage() {
     const reader = new FileReader();
     reader.onload = async () => {
       try {
-        const raw = reader.result as string;
-        const parsed = JSON.parse(raw);
-
-        // Accept either an array of packages or a single package
-        const incoming: TranslationPackage[] = Array.isArray(parsed)
+        const parsed = JSON.parse(reader.result as string);
+        const incoming: Partial<TranslationPackage>[] = Array.isArray(parsed)
           ? parsed
           : [parsed];
 
-        if (
-          incoming.length === 0 ||
-          !incoming[0].name ||
-          !incoming[0].matchingWords
-        ) {
+        if (!incoming[0]?.name || !incoming[0]?.matchingWords) {
           throw new Error(
             "Invalid file. Expected a JSON array of translation packages.",
           );
         }
 
-        // Build a set of existing names for duplicate detection
-        const currentPackages = await getPackages();
-        const existingNames = new Set(currentPackages.map((p) => p.name));
-
-        let importedCount = 0;
-        for (const pkg of incoming) {
-          // Generate a unique name if it already exists
-          let finalName = pkg.name;
-          if (existingNames.has(finalName)) {
-            let counter = 2;
-            while (existingNames.has(`${pkg.name} (${counter})`)) {
-              counter++;
-            }
-            finalName = `${pkg.name} (${counter})`;
-          }
-          existingNames.add(finalName);
-
-          const newPkg: TranslationPackage = {
-            ...pkg,
-            id: crypto.randomUUID(), // always create new ID
-            name: finalName,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          };
-          await savePackage(newPkg);
-          importedCount++;
-        }
-
+        const importedCount = await importPackages(incoming);
         await load();
         addToast("success", `Imported ${importedCount} package(s)`);
       } catch (err: any) {

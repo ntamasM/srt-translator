@@ -1,0 +1,20 @@
+{
+  "name": "Jujutsu Kaisen",
+  "categories": ["Anime"],
+  "titleKeyword": "Jujutsu Kaisen",
+  "keywords": [
+    "cursed energy",
+    "sorcerer",
+    "shibuya",
+    "Tokyo Jujutsu High",
+    "curse"
+  ],
+  "matchingWords": [
+    { "source": "Domain Expansion", "target": "Επέκταση Πεδίου" },
+    { "source": "Cursed Technique", "target": "Καταραμένη Τεχνική" },
+    { "source": "Cursed Energy", "target": "Καταραμένη Ενέργεια" },
+    { "source": "Sorcerer", "target": "Μάγος" },
+    { "source": "Special Grade", "target": "Ειδικού Βαθμού" }
+  ],
+  "removalWords": ["um", "uh", "uhh"]
+}

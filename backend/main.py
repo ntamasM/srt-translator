@@ -17,7 +17,7 @@ from logging_config import setup_logging
 from middleware.rate_limit import limiter
 from middleware.security_headers import SecurityHeadersMiddleware
 from middleware.session import SessionCookieMiddleware
-from routers import files, health, translation
+from routers import files, health, suggestion_packages, translation
 from services.file_service import cleanup_old_files
 
 log = logging.getLogger(__name__)
@@ -75,6 +75,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(files.router)
     app.include_router(translation.router)
+    app.include_router(suggestion_packages.router)
 
     # ── SPA fallback (production) ────────────────────────────────────────
     _mount_spa(app)

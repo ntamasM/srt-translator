@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import OldFilesPage from "./pages/OldFilesPage";
 import PackagesPage from "./pages/PackagesPage";
 import PackageDetailPage from "./pages/PackageDetailPage";
+import SuggestionPackagesPage from "./pages/SuggestionPackagesPage";
 import AboutPage from "./pages/AboutPage";
 import SettingsLayout from "./pages/settings/SettingsLayout";
 import GeneralSettings from "./pages/settings/GeneralSettings";
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/files" element={<OldFilesPage />} />
               <Route path="/packages" element={<PackagesPage />} />
               <Route path="/packages/:packageId" element={<PackageDetailPage />} />
+              <Route path="/suggestion-packages" element={<SuggestionPackagesPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/settings" element={<SettingsLayout />}>
                 <Route index element={<Navigate to="general" replace />} />

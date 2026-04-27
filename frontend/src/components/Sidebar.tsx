@@ -1,12 +1,13 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Home, Settings, FolderOpen, Info, Package } from "lucide-react";
+import { Home, Settings, FolderOpen, Info, Package, Sparkles } from "lucide-react";
 import logoIcon from "../../assets/icons/Srt-Translator--icon.svg";
 
 const navItems = [
   { to: "/", label: "Home", icon: Home },
   { to: "/files", label: "Old Files", icon: FolderOpen },
   { to: "/packages", label: "Packages", icon: Package },
+  { to: "/suggestion-packages", label: "Suggestions", icon: Sparkles },
   { to: "/settings/general", label: "Settings", icon: Settings },
   { to: "/about", label: "About", icon: Info },
 ];

@@ -42,3 +42,13 @@ export interface TranslationPackage {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface SuggestionPackage {
+  filename: string;
+  name: string;
+  categories: string[];
+  titleKeyword: string;
+  keywords: string[];
+  matchingWords: MatchingWord[];
+  removalWords: string[];
+}

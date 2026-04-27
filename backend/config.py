@@ -94,6 +94,10 @@ class AppSettings(BaseSettings):
     def max_upload_bytes(self) -> int:
         return self.max_upload_size_mb * 1024 * 1024
 
+    @property
+    def suggestion_packages_dir(self) -> Path:
+        return Path(__file__).resolve().parent / "suggestion-packages"
+
 
 # Singleton — imported by other modules as `from config import settings`
 settings = AppSettings()

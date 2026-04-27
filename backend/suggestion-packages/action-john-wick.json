@@ -1,0 +1,20 @@
+{
+  "name": "John Wick",
+  "categories": ["Action"],
+  "titleKeyword": "John Wick",
+  "keywords": [
+    "Continental Hotel",
+    "High Table",
+    "assassin",
+    "gold coin",
+    "Baba Yaga"
+  ],
+  "matchingWords": [
+    { "source": "Continental", "target": "Continental" },
+    { "source": "High Table", "target": "Υψηλό Τραπέζι" },
+    { "source": "Excommunicado", "target": "Αφορισμένος" },
+    { "source": "Marker", "target": "Όρκος" },
+    { "source": "Baba Yaga", "target": "Μπάμπα Γιάγκα" }
+  ],
+  "removalWords": ["uh", "um"]
+}
