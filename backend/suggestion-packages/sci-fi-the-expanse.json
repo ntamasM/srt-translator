@@ -1,21 +1,37 @@
 {
   "name": "The Expanse",
-  "categories": ["Sci-Fi"],
-  "titleKeyword": "The Expanse",
-  "keywords": [
-    "Belters",
-    "Inners",
-    "Rocinante",
-    "protomolecule",
-    "OPA",
-    "Ceres"
-  ],
+  "categories": ["Sci-Fi", "Space Opera", "Drama"],
+  "titleKeyword": "the expanse",
+  "keywords": ["space", "asteroids", "planets", "future"],
   "matchingWords": [
-    { "source": "Belter", "target": "Belter" },
-    { "source": "Inner", "target": "Inner" },
+    { "source": "Belter", "target": "Ζωνιανός" },
+    { "source": "Earther", "target": "Γήινος" },
+    { "source": "Martian", "target": "Αρειανός" },
     { "source": "Protomolecule", "target": "Πρωτομόριο" },
-    { "source": "Rocinante", "target": "Rocinante" },
-    { "source": "OPA", "target": "OPA" }
+    { "source": "The Belt", "target": "Η Ζώνη" },
+    {
+      "source": "Outer Planets Alliance",
+      "target": "Συμμαχία Εξωτερικών Πλανητών"
+    },
+    { "source": "Magnetic boots", "target": "Μαγνητικές μπότες" },
+    { "source": "Asteroid belt", "target": "Ζώνη αστεροειδών" },
+    { "source": "Epstein Drive", "target": "Κινητήρας Έπσταϊν" },
+    { "source": "Ring Gate", "target": "Πύλη Δακτυλίου" },
+    { "source": "Drop ship", "target": "Σκάφος ρίψης" },
+    { "source": "Gravity well", "target": "Πηγάδι βαρύτητας" },
+    { "source": "Railgun", "target": "Κανόνι ράγας" },
+    { "source": "Point defense cannon", "target": "Κανόνι σημειακής άμυνας" },
+    { "source": "Torpedo", "target": "Τορπίλη" },
+    { "source": "Zero-G", "target": "Μηδενική Βαρύτητα" },
+    { "source": "Coriolis effect", "target": "Φαινόμενο Κοριόλις" },
+    { "source": "Airbed", "target": "Αεροκρεβάτι" },
+    { "source": "Vacuum", "target": "Κενό" },
+    { "source": "Stealth tech", "target": "Τεχνολογία stealth" }
   ],
-  "removalWords": ["um", "uh", "you know"]
+  "removalWords": [
+    "[beeping]",
+    "[engine whirring]",
+    "[radio static]",
+    "[hissing]"
+  ]
 }

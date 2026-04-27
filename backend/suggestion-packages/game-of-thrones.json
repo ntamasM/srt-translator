@@ -1,0 +1,34 @@
+{
+  "name": "Game of Thrones",
+  "categories": ["Fantasy", "Drama", "Adventure"],
+  "titleKeyword": "game of thrones",
+  "keywords": ["westeros", "dragons", "stark", "lannister"],
+  "matchingWords": [
+    { "source": "Iron Throne", "target": "Σιδερένιος Θρόνος" },
+    { "source": "King's Landing", "target": "Κινγκς Λάντινγκ" },
+    { "source": "White Walker", "target": "Λευκός Οδοιπόρος" },
+    { "source": "Night's Watch", "target": "Νυχτερινή Φρουρά" },
+    { "source": "Wildling", "target": "Άγριος" },
+    { "source": "Valyrian Steel", "target": "Βαλυριανό Ατσάλι" },
+    { "source": "Dragonglass", "target": "Δρακόγυαλο" },
+    { "source": "Maester", "target": "Μέιστερ" },
+    { "source": "Lord Commander", "target": "Λόρδος Διοικητής" },
+    { "source": "Hand of the King", "target": "Χέρι του Βασιλιά" },
+    { "source": "Kingsguard", "target": "Φρουρά του Βασιλιά" },
+    { "source": "Direwolf", "target": "Ανταρόλυκος" },
+    { "source": "Three-Eyed Raven", "target": "Κοράκι με τα Τρία Μάτια" },
+    { "source": "Lord of Light", "target": "Άρχοντας του Φωτός" },
+    { "source": "Faceless Men", "target": "Απρόσωποι" },
+    { "source": "The Wall", "target": "Το Τείχος" },
+    { "source": "Khaleesi", "target": "Καλίσι" },
+    { "source": "Unsullied", "target": "Άσπιλοι" },
+    { "source": "Warg", "target": "Γουόργκ" },
+    { "source": "Small Council", "target": "Μικρό Συμβούλιο" }
+  ],
+  "removalWords": [
+    "[swords clashing]",
+    "[dragon roars]",
+    "[horse neighs]",
+    "[screaming]"
+  ]
+}

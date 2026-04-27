@@ -181,7 +181,7 @@ export default function SuggestionPackagesPage() {
           />
         </div>
         {categories.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {categories.map((cat) => {
               const active = selectedCategories.has(cat);
               return (
@@ -189,16 +189,27 @@ export default function SuggestionPackagesPage() {
                   key={cat}
                   type="button"
                   onClick={() => toggleCategory(cat)}
-                  className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                  aria-pressed={active}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                     active
-                      ? "bg-primary/20 text-primary dark:bg-dark-primary/30 dark:text-dark-primary"
+                      ? "bg-primary text-white shadow-sm ring-2 ring-primary/30 hover:bg-primary/90 dark:bg-dark-primary dark:text-white dark:ring-dark-primary/40 dark:hover:bg-dark-primary/90"
                       : "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-dark-primary/20 dark:text-dark-primary dark:hover:bg-dark-primary/30"
                   }`}
                 >
                   {cat}
+                  {active && <X size={12} strokeWidth={3} />}
                 </button>
               );
             })}
+            {selectedCategories.size > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedCategories(new Set())}
+                className="ml-1 text-xs font-medium text-base-content/60 underline-offset-2 hover:text-primary hover:underline dark:text-dark-base-content/50 dark:hover:text-dark-primary"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -1,20 +1,35 @@
 {
   "name": "John Wick",
-  "categories": ["Action"],
-  "titleKeyword": "John Wick",
-  "keywords": [
-    "Continental Hotel",
-    "High Table",
-    "assassin",
-    "gold coin",
-    "Baba Yaga"
-  ],
+  "categories": ["Action", "Crime", "Thriller"],
+  "titleKeyword": "john wick",
+  "keywords": ["assassin", "underworld", "hitman", "syndicate"],
   "matchingWords": [
-    { "source": "Continental", "target": "Continental" },
-    { "source": "High Table", "target": "Υψηλό Τραπέζι" },
+    { "source": "High Table", "target": "Υψηλή Τράπεζα" },
+    { "source": "Continental", "target": "Κοντινένταλ" },
     { "source": "Excommunicado", "target": "Αφορισμένος" },
-    { "source": "Marker", "target": "Όρκος" },
-    { "source": "Baba Yaga", "target": "Μπάμπα Γιάγκα" }
+    { "source": "Marker", "target": "Όρκος Αίματος" },
+    { "source": "Assassin", "target": "Εκτελεστής" },
+    { "source": "Hitman", "target": "Πληρωμένος Δολοφόνος" },
+    { "source": "Syndicate", "target": "Συνδικάτο" },
+    { "source": "Bounty", "target": "Επικήρυξη" },
+    { "source": "Cartel", "target": "Καρτέλ" },
+    { "source": "Underworld", "target": "Υπόκοσμος" },
+    { "source": "Sanctuary", "target": "Άσυλο" },
+    { "source": "Contract", "target": "Συμβόλαιο" },
+    { "source": "Revenge", "target": "Εκδίκηση" },
+    { "source": "Ammunition", "target": "Πυρομαχικά" },
+    { "source": "Caliber", "target": "Διαμέτρημα" },
+    { "source": "Sniper", "target": "Ελεύθερος Σκοπευτής" },
+    { "source": "Bulletproof", "target": "Αλεξίσφαιρο" },
+    { "source": "Vengeance", "target": "Εκδίκηση" },
+    { "source": "Target", "target": "Στόχος" },
+    { "source": "Arsenal", "target": "Οπλοστάσιο" }
   ],
-  "removalWords": ["uh", "um"]
+  "removalWords": [
+    "[gunshot]",
+    "[grunting]",
+    "[sighs]",
+    "[panting]",
+    "[explosion]"
+  ]
 }

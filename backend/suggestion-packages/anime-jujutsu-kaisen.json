@@ -1,20 +1,32 @@
 {
   "name": "Jujutsu Kaisen",
-  "categories": ["Anime"],
-  "titleKeyword": "Jujutsu Kaisen",
-  "keywords": [
-    "cursed energy",
-    "sorcerer",
-    "shibuya",
-    "Tokyo Jujutsu High",
-    "curse"
-  ],
+  "categories": ["Anime", "Action", "Supernatural"],
+  "titleKeyword": "jujutsu kaisen",
+  "keywords": ["curse", "sorcery", "shibuya", "domain"],
   "matchingWords": [
-    { "source": "Domain Expansion", "target": "Επέκταση Πεδίου" },
-    { "source": "Cursed Technique", "target": "Καταραμένη Τεχνική" },
     { "source": "Cursed Energy", "target": "Καταραμένη Ενέργεια" },
-    { "source": "Sorcerer", "target": "Μάγος" },
-    { "source": "Special Grade", "target": "Ειδικού Βαθμού" }
+    { "source": "Cursed Technique", "target": "Καταραμένη Τεχνική" },
+    { "source": "Domain Expansion", "target": "Επέκταση Πεδίου" },
+    { "source": "Jujutsu Sorcerer", "target": "Μάγος Ζουτζούτσου" },
+    { "source": "Curse", "target": "Κατάρα" },
+    { "source": "Special Grade", "target": "Ειδικού Βαθμού" },
+    { "source": "Cursed Spirit", "target": "Καταραμένο Πνεύμα" },
+    { "source": "Six Eyes", "target": "Έξι Μάτια" },
+    { "source": "Limitless", "target": "Απεριόριστο" },
+    { "source": "Binding Vow", "target": "Όρκος Δέσμευσης" },
+    { "source": "Heavenly Restriction", "target": "Ουράνιος Περιορισμός" },
+    { "source": "Cursed Object", "target": "Καταραμένο Αντικείμενο" },
+    { "source": "Shikigami", "target": "Σικιγκάμι" },
+    { "source": "Black Flash", "target": "Μαύρη Λάμψη" },
+    {
+      "source": "Reverse Cursed Technique",
+      "target": "Αντίστροφη Καταραμένη Τεχνική"
+    },
+    { "source": "Vessel", "target": "Δοχείο" },
+    { "source": "Curse User", "target": "Χρήστης Κατάρας" },
+    { "source": "Talisman", "target": "Φυλαχτό" },
+    { "source": "Innate Domain", "target": "Εγγενές Πεδίο" },
+    { "source": "Death Painting", "target": "Πίνακας Θανάτου" }
   ],
-  "removalWords": ["um", "uh", "uhh"]
+  "removalWords": ["[gasps]", "[screams]", "[rumbling]", "[whoosh]"]
 }
