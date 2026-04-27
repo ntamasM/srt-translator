@@ -14,6 +14,8 @@ import {
   Package,
   Database,
   Sparkles,
+  Star,
+  Github,
 } from "lucide-react";
 import logoIcon from "../../assets/icons/Srt-Translator--icon.svg";
 import { configApi } from "../api/configApi";
@@ -258,8 +260,46 @@ export default function AboutPage() {
             </div>
           </div>
 
+          {/* Star CTA */}
+          <div className="mb-6 rounded-xl border border-warning/40 bg-warning/10 p-5 text-center dark:border-dark-warning/40 dark:bg-dark-warning/10">
+            <div className="mb-2 flex items-center justify-center gap-2">
+              <Star
+                size={20}
+                className="fill-warning text-warning dark:fill-dark-warning dark:text-dark-warning"
+              />
+              <h3 className="text-base font-bold text-base-content md:text-lg dark:text-dark-base-content">
+                Loving the project? Star it on GitHub!
+              </h3>
+              <Star
+                size={20}
+                className="fill-warning text-warning dark:fill-dark-warning dark:text-dark-warning"
+              />
+            </div>
+            <p className="text-sm text-base-content/70 dark:text-dark-base-content/60">
+              It only takes a second and it helps a lot — head to the repo and
+              hit the <strong>★ Star</strong> button at the top right.
+            </p>
+          </div>
+
           {/* Action buttons */}
-          <div className="mb-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mb-8 flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap">
+            <a
+              href="https://github.com/ntamasM/srt-translator"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative w-full sm:w-auto"
+            >
+              <div className="absolute -inset-0.5 rounded-lg bg-linear-to-r from-warning to-error opacity-40 blur transition duration-300 group-hover:opacity-70" />
+              <div className="relative flex items-center justify-center gap-2 rounded-lg bg-linear-to-r from-neutral to-base-content px-8 py-4 font-semibold text-white shadow-lg transition-transform duration-200 group-hover:scale-105 dark:from-dark-base-300 dark:to-dark-base-200">
+                <Github size={20} />
+                Star on GitHub
+                <Star
+                  size={16}
+                  className="fill-warning text-warning transition-transform group-hover:rotate-12"
+                />
+              </div>
+            </a>
+
             <a
               href="https://ntamadakis.gr/"
               target="_blank"
