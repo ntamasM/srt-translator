@@ -25,7 +25,7 @@ import { getSettings, getPackage, getPackages } from "../utils/db";
 import { LANGUAGES } from "../utils/constants";
 import type { TranslationPackage } from "../types/settings";
 
-export default function HomePage() {
+export default function TranslatePage() {
   const { settings, updateSettings } = useSettings();
   const {
     files,

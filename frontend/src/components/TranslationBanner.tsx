@@ -16,7 +16,7 @@ export default function TranslationBanner() {
 
   // Don't show when idle or when already on the home page
   if (status === "idle") return null;
-  if (location.pathname === "/") return null;
+  if (location.pathname === "/translate") return null;
 
   const progressList = Object.values(fileProgress);
   const pct = overallProgress(progressList);
@@ -66,7 +66,7 @@ export default function TranslationBanner() {
 
   return (
     <button
-      onClick={() => navigate("/")}
+      onClick={() => navigate("/translate")}
       className={`flex w-full items-center gap-3 border-b px-4 py-2.5 transition-colors hover:opacity-90 ${c.bg}`}
     >
       <span className={c.text}>{c.icon}</span>
