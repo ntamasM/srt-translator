@@ -20,7 +20,7 @@ export interface Settings {
   append_credits_at_end: boolean;
   theme: Theme;
   date_format: DateFormat;
-  activePackageId: string | null;
+  defaultPackageId: string | null;
 }
 
 export interface MatchingWord {

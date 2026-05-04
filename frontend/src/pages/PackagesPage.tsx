@@ -75,8 +75,8 @@ export default function PackagesPage() {
       selected.delete(deleteTarget.id);
       setSelected(new Set(selected));
       await load();
-      if (settings?.activePackageId === deleteTarget.id) {
-        await updateSettings({ activePackageId: null });
+      if (settings?.defaultPackageId === deleteTarget.id) {
+        await updateSettings({ defaultPackageId: null });
       }
       addToast("success", "Package deleted");
     } catch (err: any) {
@@ -84,12 +84,12 @@ export default function PackagesPage() {
     }
   };
 
-  const handleSetActive = async (pkg: TranslationPackage) => {
-    const newId = settings?.activePackageId === pkg.id ? null : pkg.id;
-    await updateSettings({ activePackageId: newId });
+  const handleSetDefault = async (pkg: TranslationPackage) => {
+    const newId = settings?.defaultPackageId === pkg.id ? null : pkg.id;
+    await updateSettings({ defaultPackageId: newId });
     addToast(
       "success",
-      newId ? `"${pkg.name}" set as active package` : "Active package cleared",
+      newId ? `"${pkg.name}" set as default package` : "Default package cleared",
     );
   };
 
@@ -145,8 +145,8 @@ export default function PackagesPage() {
         await deletePackage(id);
       }
       const count = selected.size;
-      if (settings?.activePackageId && selected.has(settings.activePackageId)) {
-        await updateSettings({ activePackageId: null });
+      if (settings?.defaultPackageId && selected.has(settings.defaultPackageId)) {
+        await updateSettings({ defaultPackageId: null });
       }
       setSelected(new Set());
       setBulkDeleteOpen(false);
@@ -287,7 +287,7 @@ export default function PackagesPage() {
           </button>
 
           {packages.map((pkg) => {
-            const isActive = settings?.activePackageId === pkg.id;
+            const isDefault = settings?.defaultPackageId === pkg.id;
             const isSelected = selected.has(pkg.id);
             return (
               <div
@@ -295,7 +295,7 @@ export default function PackagesPage() {
                 className={`group relative cursor-pointer rounded-xl border p-4 transition-colors hover:border-primary/40 dark:hover:border-dark-primary/40 ${
                   isSelected
                     ? "border-accent bg-primary/5 dark:border-dark-primary dark:bg-dark-primary/5"
-                    : isActive
+                    : isDefault
                       ? "border-primary/60 bg-primary/5 dark:border-dark-primary/60 dark:bg-dark-primary/5"
                       : "border-base-300 bg-base-100 dark:border-dark-base-300 dark:bg-dark-base-200"
                 }`}
@@ -316,9 +316,9 @@ export default function PackagesPage() {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    {isActive && (
+                    {isDefault && (
                       <span className="absolute right-3 top-3 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary dark:bg-dark-primary/20 dark:text-dark-primary">
-                        Active
+                        Default
                       </span>
                     )}
 
@@ -355,9 +355,9 @@ export default function PackagesPage() {
                     >
                       <Button
                         variant="secondary"
-                        onClick={() => handleSetActive(pkg)}
+                        onClick={() => handleSetDefault(pkg)}
                         icon={
-                          isActive ? (
+                          isDefault ? (
                             <Check size={14} />
                           ) : (
                             <Package size={14} />
@@ -365,7 +365,7 @@ export default function PackagesPage() {
                         }
                         className="!px-3 !py-1 !text-xs"
                       >
-                        {isActive ? "Deactivate" : "Set Active"}
+                        {isDefault ? "Remove Default" : "Set as Default"}
                       </Button>
                       <Button
                         variant="secondary"

@@ -132,7 +132,7 @@ export default function ManageData() {
         add_credits: true,
         append_credits_at_end: false,
         date_format: "system",
-        activePackageId: null,
+        defaultPackageId: null,
       });
 
       setDeleteOpen(false);

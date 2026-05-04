@@ -28,7 +28,7 @@ const DEFAULT_SETTINGS: Settings = {
   append_credits_at_end: false,
   theme: "system",
   date_format: "system",
-  activePackageId: null,
+  defaultPackageId: null,
 };
 
 let _dbPromise: Promise<IDBDatabase> | null = null;
@@ -146,8 +146,8 @@ export async function savePackage(pkg: TranslationPackage): Promise<void> {
 export async function deletePackage(id: string): Promise<void> {
   // If this package is the active one, clear the active selection
   const settings = await getSettings();
-  if (settings.activePackageId === id) {
-    await saveSettings({ activePackageId: null });
+  if (settings.defaultPackageId === id) {
+    await saveSettings({ defaultPackageId: null });
   }
   const db = await openDB();
   return new Promise((resolve, reject) => {

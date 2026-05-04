@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
   ArrowRightLeft,
+  Check,
   Play,
   RotateCcw,
   X,
@@ -20,7 +21,7 @@ import { useSettings } from "../hooks/useSettings";
 import { useToast } from "../components/Toast";
 import { formatFileSize, overallProgress } from "../utils/helpers";
 import { filesApi } from "../api/filesApi";
-import { getSettings, getPackage } from "../utils/db";
+import { getSettings, getPackage, getPackages } from "../utils/db";
 import { LANGUAGES } from "../utils/constants";
 import type { TranslationPackage } from "../types/settings";
 
@@ -48,26 +49,35 @@ export default function HomePage() {
   const [previewFilename, setPreviewFilename] = useState("");
   const [previewText, setPreviewText] = useState("");
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-  const [activePkg, setActivePkg] = useState<TranslationPackage | null>(null);
+
+  // Session-only package selection — does not persist to settings
+  const [selectedPkg, setSelectedPkg] = useState<TranslationPackage | null>(null);
+  const [allPackages, setAllPackages] = useState<TranslationPackage[]>([]);
+  const [showPkgPicker, setShowPkgPicker] = useState(false);
 
   useEffect(() => {
     refreshFiles();
   }, [refreshFiles]);
 
-  // Load active package when settings change
+  // Load all packages for the picker
   useEffect(() => {
-    if (!settings?.activePackageId) {
-      setActivePkg(null);
+    getPackages().then((pkgs) => {
+      pkgs.sort((a, b) => b.updatedAt - a.updatedAt);
+      setAllPackages(pkgs);
+    });
+  }, []);
+
+  // Initialize selected package from the default on first load
+  useEffect(() => {
+    if (!settings?.defaultPackageId) {
+      setSelectedPkg(null);
       return;
     }
-    getPackage(settings.activePackageId).then((pkg) => {
-      setActivePkg(pkg ?? null);
-      // Clear stale reference if package was deleted
-      if (!pkg && settings.activePackageId) {
-        updateSettings({ activePackageId: null });
-      }
+    getPackage(settings.defaultPackageId).then((pkg) => {
+      setSelectedPkg(pkg ?? null);
+      if (!pkg) updateSettings({ defaultPackageId: null });
     });
-  }, [settings?.activePackageId]);
+  }, [settings?.defaultPackageId]);
 
   const handleAddFiles = async (newFiles: File[]) => {
     try {
@@ -87,14 +97,14 @@ export default function HomePage() {
   };
 
   const handleStart = async () => {
-    if (files.length === 0 || !settings || !activePkg) return;
+    if (files.length === 0 || !settings || !selectedPkg) return;
     try {
       const latestSettings = await getSettings();
-      const matchingWords = activePkg.matchingWords;
-      const removalWords = activePkg.removalWords;
+      const matchingWords = selectedPkg.matchingWords;
+      const removalWords = selectedPkg.removalWords;
       const keywords = [
-        ...(activePkg.titleKeyword ? [activePkg.titleKeyword] : []),
-        ...activePkg.keywords,
+        ...(selectedPkg.titleKeyword ? [selectedPkg.titleKeyword] : []),
+        ...selectedPkg.keywords,
       ];
 
       startTranslation(
@@ -126,7 +136,7 @@ export default function HomePage() {
   const overallPct = overallProgress(progressList);
 
   const canStart =
-    files.length > 0 && status === "idle" && settings?.api_key && !!activePkg;
+    files.length > 0 && status === "idle" && settings?.api_key && !!selectedPkg;
   const doneFiles = useMemo(
     () =>
       progressList
@@ -210,11 +220,11 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Active package indicator */}
+      {/* Package selector */}
       {status === "idle" && (
         <div
           className={`flex items-center justify-between rounded-lg border px-4 py-2.5 ${
-            activePkg
+            selectedPkg
               ? "border-primary/30 bg-primary/5 dark:border-dark-primary/30 dark:bg-dark-primary/5"
               : "border-base-300 bg-base-100 dark:border-dark-base-300 dark:bg-dark-base-200"
           }`}
@@ -223,36 +233,36 @@ export default function HomePage() {
             <Package
               size={16}
               className={
-                activePkg
+                selectedPkg
                   ? "text-primary dark:text-dark-primary"
                   : "text-base-content/40 dark:text-dark-base-content/40"
               }
             />
-            {activePkg ? (
+            {selectedPkg ? (
               <span className="text-sm font-medium text-base-content dark:text-dark-base-content">
-                {activePkg.name}
-                {activePkg.titleKeyword && (
+                {selectedPkg.name}
+                {selectedPkg.titleKeyword && (
                   <span className="ml-1.5 text-xs text-base-content/50 dark:text-dark-base-content/40">
-                    — {activePkg.titleKeyword}
+                    — {selectedPkg.titleKeyword}
                   </span>
                 )}
               </span>
             ) : (
               <span className="text-sm text-base-content/50 dark:text-dark-base-content/40">
-                No active package — select one to start translating
+                No package selected — select one to start translating
               </span>
             )}
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate("/packages")}
+              onClick={() => setShowPkgPicker(true)}
               className="text-xs font-medium text-primary hover:underline dark:text-dark-primary"
             >
-              {activePkg ? "Change" : "Select Package"}
+              {selectedPkg ? "Change" : "Select Package"}
             </button>
-            {activePkg && (
+            {selectedPkg && (
               <button
-                onClick={() => updateSettings({ activePackageId: null })}
+                onClick={() => setSelectedPkg(null)}
                 className="text-xs text-base-content/50 hover:text-base-content dark:text-dark-base-content/40 dark:hover:text-dark-base-content"
               >
                 Clear
@@ -311,7 +321,7 @@ export default function HomePage() {
           >
             {!settings?.api_key
               ? "Set API Key in Settings first"
-              : !activePkg
+              : !selectedPkg
                 ? "Select a Package first"
                 : "Start Translation"}
           </Button>
@@ -412,6 +422,7 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Preview modal */}
       <Modal
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
@@ -423,6 +434,92 @@ export default function HomePage() {
           <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap rounded-lg bg-base-200 p-3 text-xs dark:bg-dark-base-300">
             {previewText || "No preview content available."}
           </pre>
+        )}
+      </Modal>
+
+      {/* Package picker modal */}
+      <Modal
+        open={showPkgPicker}
+        onClose={() => setShowPkgPicker(false)}
+        title="Select Package"
+      >
+        {allPackages.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-8">
+            <Package
+              size={32}
+              className="text-base-content/30 dark:text-dark-base-content/30"
+            />
+            <p className="text-sm text-base-content/60 dark:text-dark-base-content/50">
+              No packages yet.
+            </p>
+            <button
+              onClick={() => {
+                setShowPkgPicker(false);
+                navigate("/packages");
+              }}
+              className="text-sm font-medium text-primary hover:underline dark:text-dark-primary"
+            >
+              Create a Package
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="max-h-[50vh] space-y-2 overflow-auto">
+              {allPackages.map((pkg) => {
+                const isDefault = settings?.defaultPackageId === pkg.id;
+                const isCurrent = selectedPkg?.id === pkg.id;
+                return (
+                  <button
+                    key={pkg.id}
+                    onClick={() => {
+                      setSelectedPkg(pkg);
+                      setShowPkgPicker(false);
+                    }}
+                    className={`w-full rounded-lg border px-4 py-3 text-left transition-colors hover:border-primary/40 dark:hover:border-dark-primary/40 ${
+                      isCurrent
+                        ? "border-primary/60 bg-primary/5 dark:border-dark-primary/60 dark:bg-dark-primary/5"
+                        : "border-base-300 bg-base-100 dark:border-dark-base-300 dark:bg-dark-base-200"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-base-content dark:text-dark-base-content">
+                        {pkg.name}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {isDefault && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary dark:bg-dark-primary/20 dark:text-dark-primary">
+                            Default
+                          </span>
+                        )}
+                        {isCurrent && (
+                          <Check
+                            size={14}
+                            className="text-primary dark:text-dark-primary"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    {pkg.titleKeyword && (
+                      <p className="mt-0.5 text-xs text-base-content/60 dark:text-dark-base-content/50">
+                        {pkg.titleKeyword}
+                      </p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="border-t border-base-300 pt-2 dark:border-dark-base-300">
+              <button
+                onClick={() => {
+                  setShowPkgPicker(false);
+                  navigate("/packages");
+                }}
+                className="text-xs font-medium text-primary hover:underline dark:text-dark-primary"
+              >
+                Manage Packages →
+              </button>
+            </div>
+          </div>
         )}
       </Modal>
     </div>
