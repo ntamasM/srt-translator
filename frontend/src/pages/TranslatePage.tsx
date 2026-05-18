@@ -24,8 +24,13 @@ import { filesApi } from "../api/filesApi";
 import { getSettings, getPackage, getPackages } from "../utils/db";
 import { LANGUAGES } from "../utils/constants";
 import type { TranslationPackage } from "../types/settings";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export default function TranslatePage() {
+  useDocumentMeta({
+    title: "Translate Subtitles — SRT Translator",
+    description: "Upload .srt subtitle files and translate them with OpenAI, Gemini, Claude, or DeepSeek across 70+ languages.",
+  });
   const { settings, updateSettings } = useSettings();
   const {
     files,

@@ -1,0 +1,26 @@
+{
+  "name": "SRT Translator",
+  "short_name": "SRT Translator",
+  "description": "Free AI-powered SRT subtitle translation tool. Translate .srt files with OpenAI, Gemini, Claude, or DeepSeek across 70+ languages.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f1413",
+  "theme_color": "#2f7d6b",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/assets/icons/Srt-Translator--icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icons/Srt-Translator--icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

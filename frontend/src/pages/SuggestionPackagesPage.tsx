@@ -16,8 +16,13 @@ import { useToast } from "../components/Toast";
 import { suggestionPackagesApi } from "../api/suggestionPackagesApi";
 import { importPackages } from "../utils/importPackages";
 import type { SuggestionPackage } from "../types/settings";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export default function SuggestionPackagesPage() {
+  useDocumentMeta({
+    title: "Suggestion Packages — SRT Translator",
+    description: "Browse curated translation packages for popular movies and TV series. Import any package with one click to improve subtitle translation accuracy.",
+  });
   const [items, setItems] = useState<SuggestionPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

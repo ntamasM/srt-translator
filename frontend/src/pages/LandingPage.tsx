@@ -169,7 +169,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-base-300 bg-base-100/95 backdrop-blur dark:border-dark-base-300 dark:bg-dark-base-100/95">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logoIcon} alt="SRT Translator" className="h-7 w-7 rounded" />
+            <img src={logoIcon} alt="SRT Translator logo — AI subtitle translation tool" className="h-7 w-7 rounded" width="28" height="28" />
             <span className="text-lg font-bold text-base-content dark:text-dark-base-content">
               SRT Translator
             </span>
@@ -185,12 +185,13 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="flex min-h-[85vh] flex-col items-center justify-center px-6 py-20 text-center">
+      <main>
+      <section aria-labelledby="hero-heading" className="flex min-h-[85vh] flex-col items-center justify-center px-6 py-20 text-center">
         <span className="mb-4 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary dark:bg-dark-primary/20 dark:text-dark-primary">
           Free &amp; Open Source
         </span>
 
-        <h1 className="mb-6 max-w-3xl text-5xl font-black leading-tight text-base-content md:text-7xl dark:text-dark-base-content">
+        <h1 id="hero-heading" className="mb-6 max-w-3xl text-5xl font-black leading-tight text-base-content md:text-7xl dark:text-dark-base-content">
           Translate{" "}
           <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent dark:from-dark-primary dark:to-dark-accent">
             Subtitles
@@ -384,12 +385,14 @@ export default function LandingPage() {
         </div>
       </section>
 
+      </main>
+
       {/* Footer */}
       <footer className="border-t border-base-300 dark:border-dark-base-300">
         <div className="mx-auto max-w-6xl px-6 py-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <Link to="/" className="flex items-center gap-2">
-              <img src={logoIcon} alt="SRT Translator" className="h-6 w-6 rounded" />
+              <img src={logoIcon} alt="SRT Translator logo" className="h-6 w-6 rounded" width="24" height="24" />
               <span className="text-sm font-bold text-base-content dark:text-dark-base-content">
                 SRT Translator
               </span>

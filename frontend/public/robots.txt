@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /settings
+Disallow: /settings/
+Disallow: /files
+Disallow: /packages/
+
+Sitemap: https://srt-translator.nt-sites.gr/sitemap.xml

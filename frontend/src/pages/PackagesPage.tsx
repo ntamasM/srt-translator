@@ -22,8 +22,13 @@ import { useSettings } from "../hooks/useSettings";
 import { getPackages, savePackage, deletePackage } from "../utils/db";
 import { importPackages } from "../utils/importPackages";
 import type { TranslationPackage } from "../types/settings";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export default function PackagesPage() {
+  useDocumentMeta({
+    title: "Translation Packages — SRT Translator",
+    description: "Create and manage per-content translation packages with title keywords, matching words, and removal words for contextually accurate subtitle translation.",
+  });
   const [packages, setPackages] = useState<TranslationPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<TranslationPackage | null>(
